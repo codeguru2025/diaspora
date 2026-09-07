@@ -4,6 +4,9 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { StickyCta } from "@/components/layout/sticky-cta";
+import { Analytics } from "@/components/analytics";
+import { ConsentBanner } from "@/components/consent-banner";
+import { ResumeBanner } from "@/components/resume-banner";
 import { site } from "@/config/site";
 
 const fraunces = Fraunces({
@@ -71,6 +74,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
         <StickyCta />
+        <ResumeBanner />
+        <ConsentBanner />
+        <Analytics />
       </body>
     </html>
   );

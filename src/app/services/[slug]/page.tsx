@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge, AvailabilityMark, NeedsInput } from "@/components/ui/primitives";
 import { ServiceCard } from "@/components/marketing/service-card";
 import { AddToFuneralButton } from "@/components/marketing/add-to-funeral-button";
+import { Recommendations } from "@/components/marketing/recommendations";
 import {
   services,
   getService,
@@ -126,12 +127,9 @@ export default async function ServiceDetailPage({
               </div>
             </div>
 
-            {s.upsellMessage && (
-              <div className="mt-4 rounded-2xl border border-champagne-deep/25 bg-champagne/10 p-5">
-                <p className="text-sm font-medium text-ink">Complete the experience</p>
-                <p className="mt-1 text-sm text-charcoal">{s.upsellMessage}</p>
-              </div>
-            )}
+            <div className="mt-4">
+              <Recommendations seedServices={[s.slug]} intro={s.upsellMessage} />
+            </div>
           </aside>
         </div>
       </Section>

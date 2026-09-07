@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge, AvailabilityMark, NeedsInput } from "@/components/ui/primitives";
 import { CtaBand } from "@/components/marketing/sections";
 import { ServiceCard } from "@/components/marketing/service-card";
+import { Recommendations } from "@/components/marketing/recommendations";
 import { packages, getPackage, comparison } from "@/config/packages";
 import { services } from "@/config/services";
 import { getPackages } from "@/lib/pol263";
@@ -160,6 +161,12 @@ export default async function PackageDetailPage({
           {addOnServices.slice(0, 9).map((s) => (
             <ServiceCard key={s.slug} service={s} />
           ))}
+        </div>
+        <div className="mt-8 max-w-xl">
+          <Recommendations
+            packageSlug={base.slug}
+            intro={`Families choosing a ${base.name} funeral often add these.`}
+          />
         </div>
         <div className="mt-8">
           <Button href="/services" variant="secondary">

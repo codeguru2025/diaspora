@@ -38,14 +38,27 @@ declare global {
   }
 }
 
+let consentCheck: () => boolean = () => false;
+
+/** Called once by <Analytics> after mount so this module can gate provider sends. */
+export function bindConsent(fn: () => boolean) {
+  consentCheck = fn;
+}
+
 export function track(event: AnalyticsEvent) {
   const enriched = { ...event, ts: Date.now() };
   queue.push(enriched);
 
-  if (typeof window !== "undefined") {
-    // GTM-style sink — harmless if no container is installed.
+  if (typeof window !== "undefined" && consentCheck()) {
+    // GTM-style sink — only after the visitor has granted consent.
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: `dfs_${event.name}`, ...event });
+
+    const plausible = (window as unknown as { plausible?: (n: string, o?: object) => void }).plausible;
+    if (plausible) {
+      const { name, ts: _ts, ...props } = enriched;
+      plausible(`dfs_${name}`, { props });
+    }
   }
 
   if (process.env.NODE_ENV === "development" && typeof console !== "undefined") {

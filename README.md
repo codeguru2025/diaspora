@@ -50,7 +50,10 @@ src/
     portal-client.ts    Client-side portal API + usePortalSession() hook
     selection-store.ts  Per-viewer "funeral in progress" (localStorage) + hook
     application-store.ts  The in-progress /join application (localStorage) + hook
-    analytics.ts   Event vocabulary (§54) — provider not yet wired
+    recommendations.ts  Contextual service/bundle recommendation engine (§12)
+    quote-token.ts  Encode/decode shareable quote links
+    consent.ts     Cookie/analytics consent state (privacy-first) + hook
+    analytics.ts   Event vocabulary (§54); sends to a provider only after consent
     format.ts, cn.ts
   components/
     ui/            Design-system primitives (Button, Section, Card, Badge, Accordion, Field…)
@@ -64,6 +67,7 @@ src/
                    gallery, resources, digital-services, campaign landing pages, legal
     join/          Guided application (account → family → beneficiary → review → submit)
     account/       Customer portal — login, enroll, dashboard, payments, documents, claims
+    q/[token]/     Read-only view of a saved / shared quote link
     api/
       quote · leads · arrange-funeral · join/register   (server-side POL263 calls)
       portal/[...path]   transparent, allow-listed proxy → POL263 /api/client-auth/*
@@ -82,8 +86,10 @@ docs/
 | Guided quote wizard + `/join` application flow (account, family, beneficiary, review) | Live premium numbers + real policy creation (needs `POL263_PUBLIC_REF` + tenant provisioned) |
 | Customer portal (`/account`): login, enrollment, dashboard, payments, documents, claims — all via a transparent proxy to POL263 `/api/client-auth/*` | A live `POL263_API_BASE_URL` on the DFS tenant; portal shows "connecting soon" until then |
 | PayNow payment panel (create intent → initiate → poll → confirm) | A connected POL263 tenant with PayNow configured |
+| Contextual recommendation engine, saved/shareable quote links (`/q/…`), on-site resume prompt for unfinished quotes/applications | — (all working; no email/SMS "you left something" recovery until the comms + consent path is confirmed) |
+| Consent-gated analytics (GA4 + Plausible), privacy-first cookie banner | Set `NEXT_PUBLIC_GA4_ID` / `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to activate |
 | Lead capture + at-need funeral request (fallback = server log) | Org-scoped public lead / funeral-request endpoints in POL263 |
-| Service catalogue, curated bundles, contextual upsell logic | Real service imagery, lead times, supplier info; the `add_ons` schema extension |
+| Service catalogue, curated bundles, contextual upsell logic | Real service imagery, lead times, supplier info; the `add_ons` schema extension — spec in `docs/POL263-ADDON-SCHEMA.md` |
 | FAQ / resource structure | FAQ answers on policy rules, full article bodies |
 | Legal page structure + required-sections outlines | All binding legal wording (DFS legal review) |
 | Testimonials structure | Real, signed-off testimonials (none are invented) |

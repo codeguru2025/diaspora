@@ -13,6 +13,7 @@ import { diasporaCountries, zimbabweProvinces } from "@/config/content";
 import { pricingModelLabels } from "@/config/services";
 import { setPackage, toggleService, useSelection } from "@/lib/selection-store";
 import { writeApplication } from "@/lib/application-store";
+import { encodeQuote } from "@/lib/quote-token";
 
 const STEPS = ["Package", "Family", "Location", "Personalise", "Review", "Your details"] as const;
 
@@ -160,6 +161,19 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
             Keep exploring services
           </Button>
         </div>
+
+        <SaveQuoteBlock
+          data={{
+            p: pkg,
+            s: chosen,
+            a: adults,
+            c: children,
+            r: residence,
+            province,
+            premium: estimate?.premium ?? null,
+            currency: estimate?.currency ?? "USD",
+          }}
+        />
       </div>
     );
   }
@@ -454,6 +468,50 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between border-b border-line pb-2">
       <span className="text-xs font-semibold uppercase tracking-[0.14em] text-stone">{label}</span>
       <span className="text-sm text-ink">{value}</span>
+    </div>
+  );
+}
+
+function SaveQuoteBlock({ data }: { data: import("@/lib/quote-token").QuoteTokenData }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  function save() {
+    const token = encodeQuote(data);
+    const link = `${window.location.origin}/q/${token}`;
+    setUrl(link);
+    navigator.clipboard?.writeText(link).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      },
+      () => {},
+    );
+  }
+
+  return (
+    <div className="mt-6 border-t border-sage/25 pt-5">
+      {!url ? (
+        <button
+          type="button"
+          onClick={save}
+          className="text-sm font-medium text-champagne-deep hover:text-ink"
+        >
+          Save my quote &amp; get a shareable link
+        </button>
+      ) : (
+        <div>
+          <p className="text-xs text-stone">
+            {copied ? "Link copied — " : ""}Share this to pick up where you left off, on any device:
+          </p>
+          <input
+            readOnly
+            value={url}
+            onFocus={(e) => e.currentTarget.select()}
+            className="mt-2 w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-charcoal"
+          />
+        </div>
+      )}
     </div>
   );
 }
