@@ -12,6 +12,7 @@ import { services } from "@/config/services";
 import { diasporaCountries, zimbabweProvinces } from "@/config/content";
 import { pricingModelLabels } from "@/config/services";
 import { setPackage, toggleService, useSelection } from "@/lib/selection-store";
+import { writeApplication } from "@/lib/application-store";
 
 const STEPS = ["Package", "Family", "Location", "Personalise", "Review", "Your details"] as const;
 
@@ -118,6 +119,21 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
       });
       if (!res.ok) throw new Error();
       track({ name: "quote_completed", packageSlug: pkg ?? undefined, serviceCount: chosen.length });
+      // Seed the join flow so "Continue to join" is pre-filled.
+      writeApplication({
+        packageSlug: pkg,
+        countryOfResidence: residence,
+        serviceProvince: province,
+        selectedServices: chosen,
+        applicant: {
+          firstName: String(fd.get("firstName") || ""),
+          lastName: String(fd.get("lastName") || ""),
+          email: String(fd.get("email") || ""),
+          phone: String(fd.get("phone") || ""),
+          dateOfBirth: "",
+          nationalId: "",
+        },
+      });
       setSubmit("done");
     } catch {
       setSubmit("error");
@@ -139,7 +155,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           pick up exactly where you left off.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Button href="/protect-my-family">Continue to join</Button>
+          <Button href={pkg ? `/join?package=${pkg}` : "/join"}>Continue to join</Button>
           <Button href="/services" variant="outline">
             Keep exploring services
           </Button>

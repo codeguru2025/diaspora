@@ -29,8 +29,11 @@ export default async function ProtectMyFamilyPage({
         intro="Not because something might happen — but because your family should never have to worry about how a farewell will be handled, or paid for. Set up protection in minutes."
       >
         <div className="flex flex-wrap gap-3">
-          <Button href={quoteHref}>Start with a quote</Button>
-          <Button href={cta.consultant.href} variant="outline">
+          <Button href={pkg ? `/join?package=${pkg}` : "/join"}>Start my application</Button>
+          <Button href={quoteHref} variant="secondary">
+            Start with a quote
+          </Button>
+          <Button href={cta.consultant.href} variant="ghost">
             {cta.consultant.label}
           </Button>
         </div>
@@ -40,6 +43,9 @@ export default async function ProtectMyFamilyPage({
         <SectionHeading eyebrow="Step 1" title="Choose your protection" />
         <div className="mt-10">
           <PackageGrid />
+        </div>
+        <div className="mt-8">
+          <Button href="/join">Continue to my application</Button>
         </div>
       </Section>
 
@@ -72,9 +78,10 @@ export default async function ProtectMyFamilyPage({
           <p className="mt-4 text-xs text-mist">
             Account creation, policy issuance, beneficiaries, premiums and payment are handled by
             POL263. Waiting periods, eligibility and policy terms are{" "}
-            <NeedsInput>configured in POL263 and confirmed by DFS</NeedsInput>. Online payment
-            checkout is delivered in a later phase of this site; today the application hands over to
-            a Funeral Care Consultant to complete.
+            <NeedsInput>configured in POL263 and confirmed by DFS</NeedsInput>. When the DFS tenant
+            is connected, the application creates your policy and account directly and premiums are
+            paid online via PayNow; until then it is captured for a Funeral Care Consultant to
+            complete with you.
           </p>
         </div>
       </Section>

@@ -58,6 +58,7 @@ export const cta = {
   protectDiaspora: { label: "Protect My Family Back Home", href: "/for-the-diaspora" },
   packages: { label: "View Packages", href: "/packages" },
   quote: { label: "Get a Quote", href: "/get-a-quote" },
+  join: { label: "Start My Application", href: "/join" },
   arrange: { label: "Arrange a Funeral Now", href: "/arrange-a-funeral" },
   services: { label: "Explore Our Services", href: "/services" },
   consultant: { label: "Speak to a Funeral Care Consultant", href: "/contact" },

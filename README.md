@@ -44,20 +44,29 @@ src/
     resources.ts   Resource-centre article stubs
     content.ts     Testimonials (empty), trust markers, diaspora data, steps
   lib/
-    pol263.ts      POL263 integration layer — typed interface + fallbacks (server-only)
-    selection-store.ts  Per-viewer "funeral in progress" (localStorage) + React hook
+    pol263.ts      POL263 integration — public reads/writes: branding, packages, quote,
+                   leads, registration, funeral requests (server-only, typed, with fallback)
+    portal.ts      Transparent proxy to POL263 /api/client-auth/* (server-only)
+    portal-client.ts    Client-side portal API + usePortalSession() hook
+    selection-store.ts  Per-viewer "funeral in progress" (localStorage) + hook
+    application-store.ts  The in-progress /join application (localStorage) + hook
     analytics.ts   Event vocabulary (§54) — provider not yet wired
     format.ts, cn.ts
   components/
     ui/            Design-system primitives (Button, Section, Card, Badge, Accordion, Field…)
     layout/        Header, Footer, mobile nav, sticky CTA, Logo
     marketing/     Hero, package cards + comparison, service cards, bundle cards, sections
-    forms/         Quote wizard, Arrange-a-Funeral form, Lead form
+    forms/         Quote wizard, Join flow, PayNow panel, Arrange-a-Funeral form, Lead form
+    portal/        Portal shell (auth guard + sub-nav), login
   app/
-    (routes)       Home, packages, services, how-it-works, for-the-diaspora, about,
+    (marketing)    Home, packages, services, how-it-works, for-the-diaspora, about,
                    get-a-quote, protect-my-family, arrange-a-funeral, contact, faq,
                    gallery, resources, digital-services, campaign landing pages, legal
-    api/           quote · leads · arrange-funeral  (proxy to POL263, keep it server-side)
+    join/          Guided application (account → family → beneficiary → review → submit)
+    account/       Customer portal — login, enroll, dashboard, payments, documents, claims
+    api/
+      quote · leads · arrange-funeral · join/register   (server-side POL263 calls)
+      portal/[...path]   transparent, allow-listed proxy → POL263 /api/client-auth/*
     sitemap.ts, robots.ts, not-found.tsx
 docs/
   DFS-SYSTEM-AUDIT.md      Assessment of POL263 + what this site adds
@@ -70,7 +79,9 @@ docs/
 | Real / working | Placeholder — needs DFS / POL263 |
 |---|---|
 | All pages, brand system, mobile-first layout, SEO metadata, sitemap | Prices, benefit amounts, waiting periods, eligibility, policy terms |
-| Guided quote wizard (Package → Family → Location → Personalise → Review → Details) | Live premium numbers (needs `POL263_PUBLIC_REF` + connected quote engine) |
+| Guided quote wizard + `/join` application flow (account, family, beneficiary, review) | Live premium numbers + real policy creation (needs `POL263_PUBLIC_REF` + tenant provisioned) |
+| Customer portal (`/account`): login, enrollment, dashboard, payments, documents, claims — all via a transparent proxy to POL263 `/api/client-auth/*` | A live `POL263_API_BASE_URL` on the DFS tenant; portal shows "connecting soon" until then |
+| PayNow payment panel (create intent → initiate → poll → confirm) | A connected POL263 tenant with PayNow configured |
 | Lead capture + at-need funeral request (fallback = server log) | Org-scoped public lead / funeral-request endpoints in POL263 |
 | Service catalogue, curated bundles, contextual upsell logic | Real service imagery, lead times, supplier info; the `add_ons` schema extension |
 | FAQ / resource structure | FAQ answers on policy rules, full article bodies |

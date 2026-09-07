@@ -260,6 +260,169 @@ export async function createLead(input: LeadInput): Promise<Result<{ leadId: str
 }
 
 /* ------------------------------------------------------------------ *
+ * Registration options — products + branches for the join flow       *
+ * ------------------------------------------------------------------ */
+
+export type RegistrationOptions = {
+  configured: boolean;
+  products: {
+    id: string;
+    code: string;
+    name: string;
+    versions: { id: string; version: number; premiumMonthlyUsd?: string | null }[];
+  }[];
+  branches: { id: string; name: string }[];
+  nationalIdFormat: string | null;
+};
+
+export async function getRegistrationOptions(): Promise<Resolved<RegistrationOptions>> {
+  const fallback: RegistrationOptions = {
+    configured: false,
+    products: [],
+    branches: [],
+    nationalIdFormat: null,
+  };
+  if (!REF) return { data: fallback, source: "fallback" };
+  const r = await call<{
+    products: RegistrationOptions["products"];
+    branches: RegistrationOptions["branches"];
+    nationalIdFormat?: string;
+  }>(`/api/public/registration-options?ref=${encodeURIComponent(REF)}`);
+  if (!r.ok) return { data: fallback, source: "fallback" };
+  return {
+    source: "pol263",
+    data: {
+      configured: true,
+      products: r.data.products ?? [],
+      branches: r.data.branches ?? [],
+      nationalIdFormat: r.data.nationalIdFormat ?? null,
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Policy registration ← POST /api/public/register-policy             *
+ * ------------------------------------------------------------------ */
+
+export type RegisterPolicyInput = {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone: string;
+  dateOfBirth?: string;
+  nationalId?: string;
+  productVersionId?: string;
+  currency?: string;
+  paymentSchedule?: string;
+  packageSlug?: string;
+  countryOfResidence?: string;
+  dependents?: { firstName: string; lastName: string; relationship: string; dateOfBirth?: string }[];
+  beneficiary?: { firstName: string; lastName: string; relationship: string; nationalId?: string };
+  serviceProvince?: string;
+  selectedServices?: string[];
+  consentedAt?: string;
+};
+
+export type RegisterPolicyResult = {
+  status: "registered" | "captured";
+  policyNumber: string | null;
+  activationCode: string | null;
+  message: string;
+};
+
+export async function registerPolicy(
+  input: RegisterPolicyInput,
+): Promise<Result<RegisterPolicyResult>> {
+  // POL263's POST /api/public/register-policy is ref-scoped today. When a real
+  // productVersionId and REF are available we submit the real application; the
+  // add-on services / diaspora context ride along as a lead so nothing is lost.
+  if (REF && input.productVersionId) {
+    const r = await call<{ policyNumber: string; activationCode: string }>(
+      `/api/public/register-policy`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          ref: REF,
+          org: ORG_ID,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          dateOfBirth: input.dateOfBirth,
+          nationalId: input.nationalId,
+          productVersionId: input.productVersionId,
+          currency: input.currency ?? "USD",
+          paymentSchedule: input.paymentSchedule ?? "monthly",
+          dependents: input.dependents ?? [],
+          beneficiary: input.beneficiary,
+          consentedAt: input.consentedAt ?? new Date().toISOString(),
+        }),
+      },
+    );
+    if (r.ok) {
+      // Best-effort: attach the personalisation context as a lead note.
+      await createLead({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phone: input.phone,
+        email: input.email,
+        source: "protect_my_family",
+        productInterest: input.packageSlug,
+        countryOfResidence: input.countryOfResidence,
+        context: {
+          policyNumber: r.data.policyNumber,
+          selectedServices: input.selectedServices,
+          serviceProvince: input.serviceProvince,
+        },
+      }).catch(() => {});
+      return {
+        ok: true,
+        source: "pol263",
+        data: {
+          status: "registered",
+          policyNumber: r.data.policyNumber,
+          activationCode: r.data.activationCode,
+          message: "Your application has been created.",
+        },
+      };
+    }
+  }
+
+  // Fallback — capture the full application as a lead so a Funeral Care
+  // Consultant can complete it. The customer still gets a clean confirmation.
+  const lead = await createLead({
+    firstName: input.firstName,
+    lastName: input.lastName,
+    phone: input.phone,
+    email: input.email,
+    source: "protect_my_family",
+    productInterest: input.packageSlug,
+    countryOfResidence: input.countryOfResidence,
+    context: {
+      application: true,
+      dateOfBirth: input.dateOfBirth,
+      nationalId: input.nationalId ? "provided" : undefined,
+      dependents: input.dependents,
+      beneficiary: input.beneficiary,
+      selectedServices: input.selectedServices,
+      serviceProvince: input.serviceProvince,
+      paymentSchedule: input.paymentSchedule,
+    },
+  });
+  return {
+    ok: true,
+    source: lead.source,
+    data: {
+      status: "captured",
+      policyNumber: null,
+      activationCode: null,
+      message:
+        "We've received your application. A Funeral Care Consultant will confirm the details and your premium, and complete your policy with you.",
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * At-need funeral request — deliberately minimal, high priority      *
  * ------------------------------------------------------------------ */
 

@@ -119,8 +119,8 @@ export default async function PackageDetailPage({
                 <Button href={`/get-a-quote?package=${base.slug}`} size="sm">
                   Get a Quote
                 </Button>
-                <Button href={`/protect-my-family?package=${base.slug}`} variant="secondary" size="sm">
-                  Protect My Family
+                <Button href={`/join?package=${base.slug}`} variant="secondary" size="sm">
+                  Start my application
                 </Button>
                 <Link href="/contact" className="text-center text-sm text-stone hover:text-ink">
                   Speak to a consultant

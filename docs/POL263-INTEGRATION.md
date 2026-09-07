@@ -31,14 +31,45 @@ With none set, the site runs entirely on local fallback.
 | Service catalogue *presentation* | **this site** until `add_ons` extended (audit §5) | — |
 | Analytics | analytics platform (TBD) | emits events |
 
-## Endpoints used today (already exist in POL263 `server/routes.ts`)
+## Endpoints used today (already exist in POL263 `server/routes.ts` / `server/client-auth.ts`)
 
 | Call | Endpoint | Notes |
 |---|---|---|
 | `getBranding()` | `GET /api/public/branding?orgId=` | org identity, currencies, timezone |
-| `getPackages()` | `GET /api/public/registration-options?ref=` | needs `POL263_PUBLIC_REF`; matched to packages by `products.code` |
+| `getPackages()` / `getRegistrationOptions()` | `GET /api/public/registration-options?ref=` | needs `POL263_PUBLIC_REF`; matched to packages by `products.code` |
 | `getQuote()` | `POST /api/public/quote` | real premium engine; needs `refCode` |
+| `registerPolicy()` | `POST /api/public/register-policy` | needs `refCode` + a real `productVersionId`; otherwise captured as a lead |
 | `createLead()` | `POST /api/public/agent-vcard/:refCode/quote-lead` | ref-scoped fallback path |
+
+## Customer portal — transparent proxy (built)
+
+`/api/portal/[...path]` (`src/app/api/portal/[...path]/route.ts` + `src/lib/portal.ts`)
+forwards an **allow-listed** set of paths to `${POL263_API_BASE_URL}/api/client-auth/<path>`,
+relaying cookies both ways (POL263's `Set-Cookie` has its `Domain` stripped so the
+session cookie is first-party to the DFS origin). The browser never talks to POL263
+directly, so there is no CORS / SameSite problem.
+
+Proxied paths in use: `login`, `logout`, `me`, `claim`, `enroll`, `policies`,
+`policies/:id/{payments,members,document,beneficiary}`, `claims`, `receipts`,
+`receipts/:id/download`, `notifications`, `payment-intents`,
+`payment-intents/:id/{initiate,otp,status}`.
+
+Returns `503 { code: "PORTAL_NOT_CONFIGURED" }` when `POL263_API_BASE_URL` is unset —
+the portal UI then shows a "connecting soon" screen instead of an error.
+
+**To go live:** set `POL263_API_BASE_URL` to the DFS tenant host. No other change
+needed; the portal, join flow and quote engine all switch from fallback to live.
+
+## Still needed from POL263 to fully activate Phase 2
+
+- **Provision the DFS tenant** (`organizations` row) → `POL263_ORG_ID`.
+- **`POL263_PUBLIC_REF`** — an agent/campaign referral code for the DFS org, so the
+  existing ref-scoped quote + register-policy endpoints work. (Or add the
+  ref-optional variants below.)
+- Deploy POL263 so `POL263_API_BASE_URL` resolves to the DFS tenant host, and
+  configure PayNow for that tenant.
+- Map each package's `pol263ProductCode` (`src/config/packages.ts`) to the real
+  `products.code` values once products are configured.
 
 ## Endpoints still needed (additive, org-scoped, ref-optional)
 
