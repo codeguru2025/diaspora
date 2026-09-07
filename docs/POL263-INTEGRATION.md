@@ -1,0 +1,82 @@
+# POL263 Integration
+
+All integration goes through **`src/lib/pol263.ts`** (server-only). No POL263
+credentials or base URLs reach the browser; the Next.js `app/api/*` route handlers
+proxy the calls.
+
+## Environment
+
+| Var | Purpose |
+|---|---|
+| `POL263_API_BASE_URL` | DFS tenant host, e.g. `https://dfs.pol263.app` or the DFS custom domain |
+| `POL263_ORG_ID` | The DFS `organizations.id` in POL263 |
+| `POL263_PUBLIC_REF` | Agent/campaign referral code for the DFS org. **Required today** for the live quote engine + lead capture (existing public endpoints are ref-scoped). |
+| `POL263_API_TOKEN` | Optional server-to-server bearer token |
+| `NEXT_PUBLIC_POL263_PORTAL_URL` | The POL263 `/client` portal URL on the DFS domain |
+
+With none set, the site runs entirely on local fallback.
+
+## Source-of-truth table
+
+| Data object | Owner | This site |
+|---|---|---|
+| Customer, Policy, Beneficiary, Member | **POL263** | never stores; calls the API |
+| Premium / pricing rules | **POL263** (`product_versions`) | displays only |
+| Payment + payment status | **POL263** / PayNow | links out / hands off |
+| SMS & notifications | **POL263** | describes the benefit; never sends |
+| Communication history, documents | **POL263** | portal deep-link |
+| Lead / quote | **POL263** (`leads`, `quotes`) | captures, forwards |
+| Marketing pages & copy | **this site** (`src/config`, later a CMS) | — |
+| Product *presentation* (package names, positioning, comparison) | **this site config** → maps to POL263 `products.code` | — |
+| Service catalogue *presentation* | **this site** until `add_ons` extended (audit §5) | — |
+| Analytics | analytics platform (TBD) | emits events |
+
+## Endpoints used today (already exist in POL263 `server/routes.ts`)
+
+| Call | Endpoint | Notes |
+|---|---|---|
+| `getBranding()` | `GET /api/public/branding?orgId=` | org identity, currencies, timezone |
+| `getPackages()` | `GET /api/public/registration-options?ref=` | needs `POL263_PUBLIC_REF`; matched to packages by `products.code` |
+| `getQuote()` | `POST /api/public/quote` | real premium engine; needs `refCode` |
+| `createLead()` | `POST /api/public/agent-vcard/:refCode/quote-lead` | ref-scoped fallback path |
+
+## Endpoints still needed (additive, org-scoped, ref-optional)
+
+Proposed additions to POL263 — small, backwards-compatible, mirror existing patterns:
+
+1. **`GET /api/public/products?orgId=`** — active products + latest versions for an
+   org, no agent ref. (Today only `registration-options?ref=` exposes this.)
+2. **`POST /api/public/leads`** — `{ orgId, firstName, lastName, phone, email?,
+   source, productInterest?, countryOfResidence?, message?, context? }` → creates a
+   `lead` with `source` in a D2C set. No ref required.
+3. **`POST /api/public/funeral-request`** — `{ orgId, contact*, deceased*,
+   serviceLocation, ... }` → creates a **high-priority** lead (and optionally a
+   draft `funeral_case`) and fires an internal SMS/notification to the DFS at-need
+   team. This is the "Arrange a Funeral Now" backend.
+4. **`POST /api/public/quote` (ref-optional)** — accept `orgId` instead of
+   requiring `refCode`, for D2C quotes.
+5. **`POST /api/public/register-policy` (ref-optional, org-scoped)** — for P2 D2C
+   join without an agent link. Already exists ref-scoped.
+6. **`add_ons` schema extension** — audit §5. Then a
+   `GET /api/public/service-catalogue?orgId=` so `getServiceCatalogue()` can stop
+   using local config.
+
+Each `pol263.ts` function already has a `NOT-YET-AVAILABLE` comment marking which
+of the above it is waiting on, and a working fallback until then.
+
+## Customer portal
+
+The authenticated area (dashboard, payments, documents, claims, members,
+notifications) is the **existing POL263 `/client` portal**, restyled in P2. Serve
+it on the DFS domain by reverse-proxying `/client`, `/api/client-auth`,
+`/api/public/pay*` and related paths to POL263, or host it at `my.<dfs-domain>`.
+`/account` on this site links to `NEXT_PUBLIC_POL263_PORTAL_URL`.
+
+## Security checklist for the new public endpoints
+
+- Rate-limit per IP (POL263 already has `express-rate-limit` + optional Redis).
+- Cloudflare Turnstile on lead / funeral-request / quote (already in POL263).
+- Validate + normalise phone (intl + local `0…`), never echo PII in URLs.
+- `source` allow-list server-side.
+- Audit-log lead/funeral-request creation (POL263 `auditLog`).
+- CORS: allow only the DFS marketing origin for these routes.
