@@ -75,6 +75,8 @@ export type ServiceItem = {
   displayOrder: number;
   /** Placeholder image treatment key — no real assets bundled. */
   image: string | null;
+  /** Illustrative wording styles a family could ask for — not real customer orders. */
+  personalisationExamples?: { text: string; translation?: string; language: string }[];
 };
 
 const anyAvail: ServiceItem["availability"] = {
@@ -161,6 +163,15 @@ export const services: ServiceItem[] = [
     active: true,
     displayOrder: 40,
     image: null,
+    personalisationExamples: [
+      { text: "Rudo Rwedu", translation: "Our Love", language: "Shona" },
+      { text: "Zorora Murugare", translation: "Rest in Peace", language: "Shona" },
+      { text: "Hamba Kahle", translation: "Go Well", language: "Zulu / Ndebele" },
+      { text: "Lala Ngoxolo", translation: "Rest in Peace", language: "Zulu / Ndebele" },
+      { text: "With Love", language: "English" },
+      { text: "Forever in Our Hearts", language: "English" },
+      { text: "A name, initials or a favourite verse", language: "Fully custom" },
+    ],
   },
   {
     slug: "customised-blanket",

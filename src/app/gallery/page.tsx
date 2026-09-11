@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { CasketSlideshow } from "@/components/marketing/casket-slideshow";
 import { CtaBand } from "@/components/marketing/sections";
 import { galleryCategories } from "@/config/content";
+import { GALLERY_PHOTOS } from "@/lib/stock-photos";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -43,11 +45,21 @@ export default function GalleryPage() {
                 key={cat}
                 className="overflow-hidden rounded-2xl border border-line bg-surface"
               >
-                <ImagePlaceholder
-                  direction="Human, authentic, elegant, Zimbabwean where possible, dignified and warm. No graphic grief, no fear-based imagery, minimal coffin imagery."
-                  aspect={i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}
-                  className="rounded-none"
-                />
+                {GALLERY_PHOTOS[cat] ? (
+                  <Image
+                    src={GALLERY_PHOTOS[cat].src}
+                    alt={cat}
+                    width={GALLERY_PHOTOS[cat].width}
+                    height={GALLERY_PHOTOS[cat].height}
+                    className={`w-full object-cover ${i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}`}
+                  />
+                ) : (
+                  <ImagePlaceholder
+                    direction="Human, authentic, elegant, Zimbabwean where possible, dignified and warm. No graphic grief, no fear-based imagery, minimal coffin imagery."
+                    aspect={i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}
+                    className="rounded-none"
+                  />
+                )}
                 <figcaption className="px-4 py-3 text-sm text-charcoal">{cat}</figcaption>
               </figure>
             ),

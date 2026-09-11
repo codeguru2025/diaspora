@@ -1,6 +1,7 @@
+import Image from "next/image";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { HOME_HERO_PHOTO } from "@/lib/stock-photos";
 import { cta } from "@/config/site";
 
 export function HomeHero() {
@@ -47,10 +48,13 @@ export function HomeHero() {
         </div>
 
         <div className="relative">
-          <ImagePlaceholder
-            direction="Family, care, warmth, dignity — Zimbabwean where possible. No coffin imagery."
-            aspect="aspect-[4/5]"
-            className="w-full rounded-3xl border border-line shadow-[var(--shadow-raised)]"
+          <Image
+            src={HOME_HERO_PHOTO.src}
+            alt="A father embracing his daughter"
+            width={HOME_HERO_PHOTO.width}
+            height={HOME_HERO_PHOTO.height}
+            priority
+            className="aspect-[4/5] w-full rounded-3xl border border-line object-cover shadow-[var(--shadow-raised)]"
           />
           <div className="absolute -bottom-5 -left-4 hidden rounded-2xl border border-line bg-surface px-5 py-4 shadow-[var(--shadow-soft)] sm:block">
             <p className="text-xs text-stone">Name it. We provide it.</p>

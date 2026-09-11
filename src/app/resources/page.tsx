@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { Badge } from "@/components/ui/primitives";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { CtaBand } from "@/components/marketing/sections";
 import { resources, resourceCategories } from "@/config/resources";
+import { RESOURCES_HERO_PHOTO } from "@/lib/stock-photos";
 
 export const metadata: Metadata = {
   title: "Resources",
@@ -21,10 +22,12 @@ export default function ResourcesPage() {
         title="Practical guidance, for a difficult time."
         intro="Planning ahead, supporting a funeral from abroad, or facing a loss now — clear, calm guides written to actually help."
         visual={
-          <ImagePlaceholder
-            direction="A leather-textured keepsake folder embossed with the gold DFS mark, styled alongside a protea flower or carved wooden keepsakes. Warm, tactile, no coffin imagery."
-            aspect="aspect-[4/5]"
-            className="w-full rounded-3xl border border-line shadow-[var(--shadow-raised)]"
+          <Image
+            src={RESOURCES_HERO_PHOTO.src}
+            alt="A protea flower in close-up bloom"
+            width={RESOURCES_HERO_PHOTO.width}
+            height={RESOURCES_HERO_PHOTO.height}
+            className="aspect-[4/5] w-full rounded-3xl border border-line object-cover shadow-[var(--shadow-raised)]"
           />
         }
       />

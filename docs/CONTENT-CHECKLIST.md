@@ -83,11 +83,15 @@ in this list has been invented — the code shows placeholders (`CONFIGURE` /
 
 ## 11. Gallery (`src/app/gallery`)
 
-- [ ] Real images per category (photography direction is documented on the page)
+- [x] Interim: free-license (Pexels) African/Zimbabwe-relevant stock photos per
+      category (`src/lib/stock-photos.ts`) — Caskets already uses real DFS photos
+- [ ] Swap each category to a real DFS photo when available
 
 ## 12. Imagery direction (site-wide)
 
-- [ ] Hero and section photography — human, warm, elegant, Zimbabwean where
+- [x] Interim: homepage hero and resources hero use free-license stock photos
+      (`src/lib/stock-photos.ts`) matching the warm/dignified/African direction
+- [ ] Replace with real DFS photography — human, warm, elegant, Zimbabwean where
       possible, dignified; **no coffin-heavy imagery, no graphic grief, no
       fear-based imagery**
 

@@ -3,6 +3,7 @@ export const SERVICE_PHOTOS: Record<string, { src: string; width: number; height
   "premium-casket": { src: "/images/caskets/premium-casket.jpg", width: 1080, height: 890 },
   "custom-casket": { src: "/images/caskets/custom-casket.jpg", width: 810, height: 1080 },
   "custom-coffin-lace": { src: "/images/caskets/custom-coffin-lace.jpg", width: 1080, height: 1080 },
+  "custom-casket-showcase": { src: "/images/caskets/custom-casket-showcase.jpg", width: 810, height: 1080 },
 };
 
 /** Every real casket photo DFS has supplied so far, for the casket gallery slideshow. */

@@ -81,6 +81,30 @@ export default async function ServiceDetailPage({
               ))}
             </ul>
 
+            {s.personalisationExamples && s.personalisationExamples.length > 0 && (
+              <>
+                <h2 className="mt-10 text-xl">Popular wording styles</h2>
+                <p className="mt-2 text-stone">
+                  A flavour of what families choose — in Shona, Zulu/Ndebele, plain English, or fully
+                  your own.
+                </p>
+                <ul className="mt-4 flex flex-wrap gap-2.5">
+                  {s.personalisationExamples.map((ex) => (
+                    <li
+                      key={ex.text}
+                      className="rounded-full border border-line bg-cream px-4 py-2 text-sm text-charcoal"
+                    >
+                      <span className="font-medium">{ex.text}</span>
+                      {ex.translation && <span className="text-stone"> — {ex.translation}</span>}
+                      <span className="ml-1.5 text-xs uppercase tracking-wide text-champagne-deep">
+                        {ex.language}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
             <h2 className="mt-10 text-xl">Availability by package</h2>
             <dl className="mt-4 divide-y divide-line border-y border-line">
               {packages.map((p) => (
