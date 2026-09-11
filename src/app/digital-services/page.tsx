@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { ServiceCard } from "@/components/marketing/service-card";
 import { BundleCard } from "@/components/marketing/bundle-card";
 import { CtaBand } from "@/components/marketing/sections";
+import { Button } from "@/components/ui/button";
 import { getService } from "@/config/services";
 import { getBundle } from "@/config/bundles";
 
@@ -32,6 +34,15 @@ export default function DigitalServicesPage() {
           {svcs.map((s) => (
             <ServiceCard key={s!.slug} service={s!} />
           ))}
+        </div>
+        <div className="mt-8 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface p-5">
+          <p className="flex-1 text-sm text-stone">
+            A Tribute Page is a shareable link with the announcement, service details and a
+            tribute wall for messages from family and friends.
+          </p>
+          <Button href="/tribute" variant="outline" size="sm">
+            Learn about Tribute Pages
+          </Button>
         </div>
       </Section>
 

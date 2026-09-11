@@ -220,7 +220,8 @@ export type LeadInput = {
     | "speak_to_us"
     | "bespoke_request"
     | "callback"
-    | "diaspora";
+    | "diaspora"
+    | "tribute_request";
   productInterest?: string;
   countryOfResidence?: string;
   message?: string;

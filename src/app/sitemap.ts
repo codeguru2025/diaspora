@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/gallery",
     "/resources",
     "/digital-services",
+    "/tribute",
     "/custom-caskets",
     "/funeral-livestreaming",
     "/travel-pack",

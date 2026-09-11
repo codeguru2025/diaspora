@@ -104,6 +104,17 @@ export default async function ServiceDetailPage({
                 we don&rsquo;t publish specs we can&rsquo;t stand behind.
               </p>
             </div>
+
+            {s.slug === "online-tribute" && (
+              <div className="mt-6 rounded-xl border border-champagne-deep/30 bg-champagne/10 p-4 text-sm">
+                <p className="text-ink">
+                  Want to see the format first?{" "}
+                  <Link href="/tribute/sample" className="font-medium text-champagne-deep hover:text-ink">
+                    View a sample tribute page →
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">

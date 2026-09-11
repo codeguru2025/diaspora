@@ -9,6 +9,7 @@ const SOURCES: LeadInput["source"][] = [
   "bespoke_request",
   "callback",
   "diaspora",
+  "tribute_request",
 ];
 
 export async function POST(req: Request) {
