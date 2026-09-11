@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
 import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { getSampleTribute } from "@/config/tribute-sample";
@@ -40,12 +41,11 @@ export default async function TributePage({
 
       <Section tone="ivory">
         <div className="mx-auto max-w-2xl">
-          <div
-            aria-hidden
-            className="grid aspect-[16/9] w-full place-items-center rounded-2xl border border-line bg-gradient-to-br from-cream via-surface to-sand text-center text-xs uppercase tracking-widest text-mist"
-          >
-            {tribute.photoCaption}
-          </div>
+          <ImagePlaceholder
+            direction={tribute.photoCaption}
+            aspect="aspect-[16/9]"
+            className="w-full rounded-2xl border border-line"
+          />
 
           <p className="mt-6 text-lg leading-relaxed text-stone">{tribute.summary}</p>
 

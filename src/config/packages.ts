@@ -33,6 +33,8 @@ export type PackageTier = {
   /** Starting price — never hard-coded. Populated from POL263 when available. */
   startingPrice: null;
   accent: "sage" | "champagne" | "clay" | "terracotta";
+  /** Slug into `SERVICE_PHOTOS` for a representative real photo, when the tier has one. */
+  heroImageSlug: string | null;
 };
 
 export const packages: PackageTier[] = [
@@ -55,6 +57,7 @@ export const packages: PackageTier[] = [
     pol263ProductCode: null,
     startingPrice: null,
     accent: "sage",
+    heroImageSlug: null,
   },
   {
     slug: "classic",
@@ -75,6 +78,7 @@ export const packages: PackageTier[] = [
     pol263ProductCode: null,
     startingPrice: null,
     accent: "champagne",
+    heroImageSlug: null,
   },
   {
     slug: "prestige",
@@ -95,6 +99,7 @@ export const packages: PackageTier[] = [
     pol263ProductCode: null,
     startingPrice: null,
     accent: "clay",
+    heroImageSlug: "premium-casket",
   },
   {
     slug: "bespoke",
@@ -115,6 +120,7 @@ export const packages: PackageTier[] = [
     pol263ProductCode: null,
     startingPrice: null,
     accent: "terracotta",
+    heroImageSlug: "custom-casket",
   },
 ];
 

@@ -19,6 +19,8 @@ export function CampaignLanding({
   primary,
   leadSource,
   leadTitle,
+  image,
+  gallery,
 }: {
   eyebrow: string;
   title: string;
@@ -28,24 +30,43 @@ export function CampaignLanding({
   primary: { label: string; href: string };
   leadSource: React.ComponentProps<typeof LeadForm>["source"];
   leadTitle: string;
+  image?: React.ReactNode;
+  /** Optional showcase (e.g. a photo slideshow) rendered as its own section, right under the hero. */
+  gallery?: { eyebrow?: string; title: string; content: React.ReactNode };
 }) {
   const svcs = serviceSlugs.map(getService).filter(Boolean);
+  const cta = (
+    <div className="flex flex-wrap gap-3">
+      <Button href={primary.href} variant="accent">
+        {primary.label}
+      </Button>
+      <Button
+        href="#enquire"
+        variant="outline"
+        className="border-ivory/30 text-ivory hover:bg-ivory/10"
+      >
+        Ask a question
+      </Button>
+    </div>
+  );
   return (
     <>
-      <PageHeader eyebrow={eyebrow} title={title} intro={intro} tone="ink">
-        <div className="flex flex-wrap gap-3">
-          <Button href={primary.href} variant="accent">
-            {primary.label}
-          </Button>
-          <Button
-            href="#enquire"
-            variant="outline"
-            className="border-ivory/30 text-ivory hover:bg-ivory/10"
-          >
-            Ask a question
-          </Button>
-        </div>
-      </PageHeader>
+      {image ? (
+        <PageHeader eyebrow={eyebrow} title={title} intro={intro} tone="ink" visual={image}>
+          {cta}
+        </PageHeader>
+      ) : (
+        <PageHeader eyebrow={eyebrow} title={title} intro={intro} tone="ink">
+          {cta}
+        </PageHeader>
+      )}
+
+      {gallery && (
+        <Section tone="cream">
+          <SectionHeading eyebrow={gallery.eyebrow} title={gallery.title} />
+          <div className="mt-8">{gallery.content}</div>
+        </Section>
+      )}
 
       <Section tone="ivory">
         <div className="grid gap-10 lg:grid-cols-[1fr_1fr]">

@@ -21,27 +21,30 @@ export const site = {
   // Public URL of this site (used for canonical URLs, sitemap, JSON-LD).
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.diasporafuneralservices.com",
 
-  // ---- Contact channels (PLACEHOLDER — CONFIGURE) ----
+  // ---- Contact channels ----
   contact: {
-    phoneDisplay: "+263 (0) 000 000 000", // CONFIGURE
-    phoneHref: "tel:+263000000000", // CONFIGURE
-    // A dedicated, always-answered line for families who have just lost someone.
-    atNeedPhoneDisplay: "+263 (0) 000 000 111", // CONFIGURE
-    atNeedPhoneHref: "tel:+263000000111", // CONFIGURE
-    email: "hello@diasporafuneralservices.com", // CONFIGURE
-    atNeedEmail: "care@diasporafuneralservices.com", // CONFIGURE
-    whatsappDisplay: "+263 (0) 000 000 000", // CONFIGURE
+    phoneDisplay: "+44 7395 511836",
+    phoneHref: "tel:+447395511836",
+    // No separate at-need line supplied yet — reusing the main number rather
+    // than showing a fake one to a family who has just lost someone.
+    atNeedPhoneDisplay: "+44 7395 511836",
+    atNeedPhoneHref: "tel:+447395511836",
+    email: "hello@diasporafuneralservices.com",
+    atNeedEmail: "care@diasporafuneralservices.com", // CONFIGURE — confirm this inbox exists and is monitored
+    whatsappDisplay: "+44 7395 511836",
     // Configurable click-to-chat link. No WhatsApp Business API is assumed.
-    whatsappHref: "https://wa.me/263000000000", // CONFIGURE
+    whatsappHref: "https://wa.me/447395511836", // CONFIGURE — confirm this number is on WhatsApp
     officeAddress: CONFIGURE,
     officeHours: CONFIGURE,
   },
 
   social: {
-    facebook: CONFIGURE,
-    instagram: CONFIGURE,
+    facebook: "https://facebook.com/diasporafuneralservice",
+    instagram: "https://instagram.com/diasporafuneralservice",
+    // LinkedIn company pages use an independently-chosen slug, not the handle
+    // used on other platforms — confirm the real /company/ URL with DFS.
     linkedin: CONFIGURE,
-    youtube: CONFIGURE,
+    youtube: "https://youtube.com/@diasporafuneralservice",
   },
 
   // Coverage statement for the footer / trust sections.

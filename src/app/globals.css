@@ -143,3 +143,15 @@
 .needs-input {
   border-bottom: 1px dashed var(--color-champagne-deep);
 }
+
+/* Slow pan-and-zoom for the casket gallery slideshow. Runs continuously and
+   independently of the slide interval so a crossfade never has to fight a
+   transform reset. */
+.animate-ken-burns {
+  animation: ken-burns 16s ease-in-out infinite alternate;
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.12) translate(-2%, -2%); }
+}

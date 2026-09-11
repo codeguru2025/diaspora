@@ -2,10 +2,22 @@ import Link from "next/link";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { NeedsInput } from "@/components/ui/primitives";
-import { footerNav, site } from "@/config/site";
+import { FacebookIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from "@/components/ui/social-icons";
+import { footerNav, site, CONFIGURE } from "@/config/site";
 import { Logo } from "./logo";
 
+const socialIcons = {
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
+  linkedin: LinkedinIcon,
+  youtube: YoutubeIcon,
+} as const;
+
 export function Footer() {
+  const socialLinks = (Object.keys(socialIcons) as (keyof typeof socialIcons)[])
+    .map((key) => ({ key, href: site.social[key], Icon: socialIcons[key] }))
+    .filter((s) => s.href !== CONFIGURE);
+
   return (
     <footer className="bg-abyss text-ivory/70">
       <Container className="py-16">
@@ -28,6 +40,23 @@ export function Footer() {
                 <Mail className="size-4" /> {site.contact.email}
               </a>
             </div>
+
+            {socialLinks.length > 0 && (
+              <div className="mt-6 flex gap-3">
+                {socialLinks.map(({ key, href, Icon }) => (
+                  <a
+                    key={key}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${site.name} on ${key}`}
+                    className="grid size-9 place-items-center rounded-full border border-ivory/15 text-ivory/70 transition-colors hover:border-ivory/30 hover:text-ivory"
+                  >
+                    <Icon className="size-4" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">

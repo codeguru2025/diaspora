@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
@@ -13,6 +14,7 @@ import { packages, getPackage, comparison } from "@/config/packages";
 import { services } from "@/config/services";
 import { getPackages } from "@/lib/pol263";
 import { formatPrice, scheduleLabel } from "@/lib/format";
+import { SERVICE_PHOTOS } from "@/lib/service-photos";
 
 export function generateStaticParams() {
   return packages.map((p) => ({ slug: p.slug }));
@@ -48,10 +50,26 @@ export default async function PackageDetailPage({
     (s) => s.availability[base.slug] === "addon" && s.active,
   );
   const includedServices = services.filter((s) => s.availability[base.slug] === "included");
+  const photo = base.heroImageSlug ? SERVICE_PHOTOS[base.heroImageSlug] : undefined;
 
   return (
     <>
-      <PageHeader eyebrow={`${base.name} package`} title={base.positioning} intro={base.summary}>
+      <PageHeader
+        eyebrow={`${base.name} package`}
+        title={base.positioning}
+        intro={base.summary}
+        visual={
+          photo ? (
+            <Image
+              src={photo.src}
+              alt={`${base.name} package casket`}
+              width={photo.width}
+              height={photo.height}
+              className="aspect-[4/5] w-full rounded-3xl object-cover shadow-[var(--shadow-raised)]"
+            />
+          ) : undefined
+        }
+      >
         <div className="flex flex-wrap items-center gap-4">
           {price ? (
             <p className="text-ink">

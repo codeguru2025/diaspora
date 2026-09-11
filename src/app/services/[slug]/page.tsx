@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
 import { Badge, AvailabilityMark, NeedsInput } from "@/components/ui/primitives";
+import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { ServiceCard } from "@/components/marketing/service-card";
 import { AddToFuneralButton } from "@/components/marketing/add-to-funeral-button";
 import { Recommendations } from "@/components/marketing/recommendations";
@@ -17,6 +19,7 @@ import {
   pricingModelLabels,
 } from "@/config/services";
 import { packages } from "@/config/packages";
+import { SERVICE_PHOTOS } from "@/lib/service-photos";
 
 export function generateStaticParams() {
   return services.map((s) => ({ slug: s.slug }));
@@ -119,12 +122,20 @@ export default async function ServiceDetailPage({
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-2xl border border-line bg-surface p-6">
-              <div
-                aria-hidden
-                className="mb-4 grid aspect-[4/3] place-items-center rounded-xl bg-gradient-to-br from-cream to-sand text-xs uppercase tracking-widest text-mist"
-              >
-                Image · {s.name}
-              </div>
+              {SERVICE_PHOTOS[s.slug] ? (
+                <Image
+                  src={SERVICE_PHOTOS[s.slug].src}
+                  alt={s.name}
+                  width={SERVICE_PHOTOS[s.slug].width}
+                  height={SERVICE_PHOTOS[s.slug].height}
+                  className="mb-4 aspect-[4/3] w-full rounded-xl object-cover"
+                />
+              ) : (
+                <ImagePlaceholder
+                  direction={`Photo of ${s.name} — dignified, no coffin imagery, Zimbabwean where possible.`}
+                  className="mb-4"
+                />
+              )}
               <h3 className="text-lg">Add {s.name} to your funeral</h3>
               <p className="mt-1 text-sm text-stone">{s.pricing.note}</p>
               <div className="mt-4 grid gap-2">

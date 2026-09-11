@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { CampaignLanding } from "@/components/marketing/campaign-landing";
+import { CasketSlideshow } from "@/components/marketing/casket-slideshow";
 
 export const metadata: Metadata = {
   title: "Custom Caskets",
@@ -24,6 +26,20 @@ export default function CustomCasketsPage() {
       primary={{ label: "Request a bespoke quotation", href: "/contact?topic=bespoke" }}
       leadSource="bespoke_request"
       leadTitle="Enquire about a custom casket"
+      gallery={{
+        eyebrow: "Our work",
+        title: "Caskets we've made and dressed.",
+        content: <CasketSlideshow />,
+      }}
+      image={
+        <Image
+          src="/images/caskets/custom-casket-showcase.jpg"
+          alt="A custom-made casket with detailed gold hardware, crafted by DFS"
+          width={810}
+          height={1080}
+          className="aspect-[4/5] w-full rounded-3xl border border-ivory/20 object-cover shadow-[var(--shadow-raised)]"
+        />
+      }
     />
   );
 }

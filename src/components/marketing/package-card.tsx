@@ -1,10 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatPrice, scheduleLabel } from "@/lib/format";
 import { Badge, NeedsInput } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import type { ResolvedPackage } from "@/lib/pol263";
+import { SERVICE_PHOTOS } from "@/lib/service-photos";
 
 const accentBar: Record<string, string> = {
   sage: "bg-sage",
@@ -21,6 +23,7 @@ export function PackageCard({
   featured?: boolean;
 }) {
   const price = pkg.price ? formatPrice(pkg.price.amount, pkg.price.currency) : null;
+  const photo = pkg.heroImageSlug ? SERVICE_PHOTOS[pkg.heroImageSlug] : undefined;
 
   return (
     <article
@@ -30,6 +33,16 @@ export function PackageCard({
       )}
     >
       <span className={cn("absolute inset-x-0 top-0 h-1", accentBar[pkg.accent])} aria-hidden />
+
+      {photo && (
+        <Image
+          src={photo.src}
+          alt={`${pkg.name} package casket`}
+          width={photo.width}
+          height={photo.height}
+          className="-mx-6 -mt-6 mb-5 aspect-[16/10] w-[calc(100%+3rem)] object-cover"
+        />
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-2xl">{pkg.name}</h3>

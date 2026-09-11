@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
+import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { CasketSlideshow } from "@/components/marketing/casket-slideshow";
 import { CtaBand } from "@/components/marketing/sections";
 import { galleryCategories } from "@/config/content";
 
@@ -16,31 +19,40 @@ export default function GalleryPage() {
       <PageHeader
         eyebrow="Gallery"
         title="The work, and the care behind it."
-        intro="Elegant funeral setups, personalisation, memorial details and the moments that matter. Imagery to be supplied by DFS — the categories and layout are ready."
+        intro="Elegant funeral setups, personalisation, memorial details and the moments that matter."
       />
 
       <Section tone="ivory">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {galleryCategories.map((cat, i) => (
-            <figure
-              key={cat}
-              className="overflow-hidden rounded-2xl border border-line bg-surface"
-            >
-              <div
-                aria-hidden
-                className={`grid ${i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"} place-items-center bg-gradient-to-br from-cream to-sand text-xs font-medium uppercase tracking-widest text-mist`}
+          {galleryCategories.map((cat, i) =>
+            cat === "Caskets" ? (
+              <figure
+                key={cat}
+                className="overflow-hidden rounded-2xl border border-line bg-surface sm:col-span-2"
               >
-                {cat}
-              </div>
-              <figcaption className="px-4 py-3 text-sm text-charcoal">{cat}</figcaption>
-            </figure>
-          ))}
+                <CasketSlideshow />
+                <figcaption className="flex items-center justify-between gap-3 px-4 py-3 text-sm text-charcoal">
+                  <span>{cat}</span>
+                  <Link href="/custom-caskets" className="font-medium text-champagne-deep hover:underline">
+                    See custom caskets
+                  </Link>
+                </figcaption>
+              </figure>
+            ) : (
+              <figure
+                key={cat}
+                className="overflow-hidden rounded-2xl border border-line bg-surface"
+              >
+                <ImagePlaceholder
+                  direction="Human, authentic, elegant, Zimbabwean where possible, dignified and warm. No graphic grief, no fear-based imagery, minimal coffin imagery."
+                  aspect={i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}
+                  className="rounded-none"
+                />
+                <figcaption className="px-4 py-3 text-sm text-charcoal">{cat}</figcaption>
+              </figure>
+            ),
+          )}
         </div>
-        <p className="mt-8 text-xs text-mist">
-          Photography direction: human, authentic, elegant, Zimbabwean where possible, dignified and
-          warm. No graphic grief, no fear-based imagery, minimal coffin imagery. Assets required from
-          DFS.
-        </p>
       </Section>
 
       <CtaBand

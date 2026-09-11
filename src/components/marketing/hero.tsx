@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
+import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { cta } from "@/config/site";
 
 export function HomeHero() {
@@ -46,15 +47,11 @@ export function HomeHero() {
         </div>
 
         <div className="relative">
-          <div
-            aria-hidden
-            className="grid aspect-[4/5] w-full place-items-center rounded-3xl border border-line bg-gradient-to-br from-cream via-surface to-sand p-8 text-center shadow-[var(--shadow-raised)]"
-          >
-            <span className="max-w-xs text-sm font-medium uppercase tracking-widest text-mist">
-              Photography direction: family, care, warmth, dignity — Zimbabwean where possible.
-              No coffin imagery. Asset required from DFS.
-            </span>
-          </div>
+          <ImagePlaceholder
+            direction="Family, care, warmth, dignity — Zimbabwean where possible. No coffin imagery."
+            aspect="aspect-[4/5]"
+            className="w-full rounded-3xl border border-line shadow-[var(--shadow-raised)]"
+          />
           <div className="absolute -bottom-5 -left-4 hidden rounded-2xl border border-line bg-surface px-5 py-4 shadow-[var(--shadow-soft)] sm:block">
             <p className="text-xs text-stone">Name it. We provide it.</p>
             <p className="text-sm font-semibold text-ink">Essential → Bespoke</p>

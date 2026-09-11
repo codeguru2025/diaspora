@@ -11,7 +11,8 @@ in this list has been invented — the code shows placeholders (`CONFIGURE` /
 - [ ] WhatsApp number / click-to-chat link
 - [ ] General email + at-need email
 - [ ] Office address and hours
-- [ ] Social media URLs (Facebook, Instagram, LinkedIn, YouTube)
+- [x] Facebook, Instagram, YouTube — `@diasporafuneralservice`
+- [ ] LinkedIn company page URL (separate slug from the handle above)
 - [ ] Legal entity name + regulatory / licensing line for the footer
 
 ## 2. Packages (`src/config/packages.ts` + POL263)
