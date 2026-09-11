@@ -1,0 +1,77 @@
+# Diaspora Funeral Services website — DigitalOcean App Platform spec (template)
+# A separate DO App from POL263, deployed under the same DO account/API token,
+# so it can be managed with the same `doctl` / DO API access. Independent
+# codebase and independent deploy — see docs/POL263-INTEGRATION.md for how this
+# site talks to POL263 at runtime (it degrades to local content if the POL263
+# env vars below are left unset).
+#
+# Set real secrets in the dashboard (Settings → App-Level Environment Variables)
+# or via `doctl apps update <id> --spec .do/app.yaml` after filling them in
+# locally (do not commit real values).
+
+name: diaspora-funeral-services
+region: lon
+features:
+  - buildpack-stack=ubuntu-22
+services:
+  - name: web
+    run_command: npm start
+    build_command: npm ci --include=dev && npm run build
+    environment_slug: node-js
+    http_port: 3000
+    source_dir: /
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    github:
+      repo: codeguru2025/diaspora
+      branch: main
+      deploy_on_push: true
+domains:
+  - domain: diasporafunerals.com
+    type: PRIMARY
+  - domain: www.diasporafunerals.com
+    type: ALIAS
+ingress:
+  rules:
+    - match:
+        path:
+          prefix: /
+      component:
+        name: web
+envs:
+  - key: NODE_ENV
+    value: production
+    scope: RUN_AND_BUILD_TIME
+  - key: NEXT_PUBLIC_SITE_URL
+    value: https://diasporafunerals.com
+    scope: RUN_AND_BUILD_TIME
+  # ── POL263 integration — server-side only. The code checks these for an
+  #    EMPTY string to fall back to local content, not for a sentinel value —
+  #    so these must stay "" until real values are set in the dashboard, never
+  #    a placeholder like "SET_IN_DASHBOARD" (that would be truthy and the app
+  #    would try to fetch a real POL263 API at a garbage URL). ───────────────
+  - key: POL263_API_BASE_URL
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+  - key: POL263_ORG_ID
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+  - key: POL263_PUBLIC_REF
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+  - key: POL263_API_TOKEN
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+  - key: NEXT_PUBLIC_POL263_PORTAL_URL
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+  # ── Analytics — consent-gated; empty = no analytics, no consent banner. ────
+  - key: NEXT_PUBLIC_GA4_ID
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+  - key: NEXT_PUBLIC_PLAUSIBLE_DOMAIN
+    value: ""
+    scope: RUN_AND_BUILD_TIME
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
