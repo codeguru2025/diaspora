@@ -8,6 +8,7 @@ import { CasketSlideshow } from "@/components/marketing/casket-slideshow";
 import { CtaBand } from "@/components/marketing/sections";
 import { galleryCategories } from "@/config/content";
 import { GALLERY_PHOTOS } from "@/lib/stock-photos";
+import { REAL_GALLERY_PHOTOS } from "@/lib/service-photos";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -45,12 +46,12 @@ export default function GalleryPage() {
                 key={cat}
                 className="overflow-hidden rounded-2xl border border-line bg-surface"
               >
-                {GALLERY_PHOTOS[cat] ? (
+                {REAL_GALLERY_PHOTOS[cat] || GALLERY_PHOTOS[cat] ? (
                   <Image
-                    src={GALLERY_PHOTOS[cat].src}
+                    src={(REAL_GALLERY_PHOTOS[cat] ?? GALLERY_PHOTOS[cat]).src}
                     alt={cat}
-                    width={GALLERY_PHOTOS[cat].width}
-                    height={GALLERY_PHOTOS[cat].height}
+                    width={(REAL_GALLERY_PHOTOS[cat] ?? GALLERY_PHOTOS[cat]).width}
+                    height={(REAL_GALLERY_PHOTOS[cat] ?? GALLERY_PHOTOS[cat]).height}
                     className={`w-full object-cover ${i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}`}
                   />
                 ) : (
