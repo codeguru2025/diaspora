@@ -30,7 +30,7 @@ export default function ArrangeAFuneralPage() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a
               href={site.contact.atNeedPhoneHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-base font-medium text-ivory hover:bg-charcoal"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-abyss px-6 py-3.5 text-base font-medium text-ivory hover:bg-sand"
             >
               <Phone className="size-5" />
               Call our care line · {site.contact.atNeedPhoneDisplay}
@@ -46,7 +46,7 @@ export default function ArrangeAFuneralPage() {
         </Container>
       </section>
 
-      <section className="bg-ivory py-12 md:py-16">
+      <section className="bg-void py-12 md:py-16">
         <Container className="max-w-3xl">
           <ArrangeFuneralForm />
           <div className="mt-8 grid gap-4 sm:grid-cols-3 text-sm">

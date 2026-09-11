@@ -214,7 +214,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
                 }}
                 className={cn(
                   "rounded-xl border p-4 text-left transition-colors",
-                  pkg === p.slug ? "border-ink ring-1 ring-ink/20" : "border-line hover:border-ink/40",
+                  pkg === p.slug ? "border-champagne ring-1 ring-champagne/20" : "border-line hover:border-champagne/40",
                 )}
               >
                 <span className="block font-[family-name:var(--font-display)] text-lg text-ink">
@@ -310,14 +310,14 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
                   key={s.slug}
                   className={cn(
                     "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm",
-                    on ? "border-ink bg-ink/5" : "border-line",
+                    on ? "border-champagne bg-champagne/5" : "border-line",
                   )}
                 >
                   <input
                     type="checkbox"
                     checked={on}
                     onChange={() => toggle(s.slug)}
-                    className="mt-0.5 size-4 accent-[var(--color-ink)]"
+                    className="mt-0.5 size-4 accent-[var(--color-champagne)]"
                   />
                   <span>
                     <span className="font-medium text-ink">{s.name}</span>
@@ -377,7 +377,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl bg-ink p-5 text-ivory">
+          <div className="mt-6 rounded-xl bg-abyss p-5 text-ivory">
             <p className="text-xs uppercase tracking-[0.16em] text-ivory/60">
               Estimated monthly premium
             </p>

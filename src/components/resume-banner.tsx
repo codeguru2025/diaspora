@@ -54,7 +54,7 @@ export function ResumeBanner() {
 
   return (
     <div className="fixed inset-x-0 bottom-16 z-40 px-3 lg:bottom-4">
-      <div className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-ink px-4 py-3 text-ivory shadow-[var(--shadow-raised)]">
+      <div className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-abyss px-4 py-3 text-ivory shadow-[var(--shadow-raised)]">
         <p className="flex-1 text-sm">
           You have {pkgName ? `a ${pkgName} ` : "an "}
           {appActive ? "application" : "quote"} in progress
@@ -62,7 +62,7 @@ export function ResumeBanner() {
         </p>
         <Link
           href={href}
-          className="shrink-0 rounded-full bg-champagne px-3 py-1.5 text-xs font-medium text-ink hover:bg-champagne-deep hover:text-ivory"
+          className="shrink-0 rounded-full bg-champagne px-3 py-1.5 text-xs font-medium text-void hover:bg-champagne-deep hover:text-ivory"
         >
           {label}
         </Link>

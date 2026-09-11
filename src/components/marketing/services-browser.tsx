@@ -133,8 +133,8 @@ function Chip({
       className={cn(
         "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
         active
-          ? "border-ink bg-ink text-ivory"
-          : "border-line-strong bg-surface text-stone hover:border-ink/40 hover:text-ink",
+          ? "border-champagne bg-champagne text-void"
+          : "border-line-strong bg-surface text-stone hover:border-champagne/40 hover:text-champagne-deep",
       )}
     >
       {children}

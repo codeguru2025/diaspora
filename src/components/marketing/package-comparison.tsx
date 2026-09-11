@@ -27,7 +27,7 @@ export function PackageComparison() {
               }}
               className={cn(
                 "shrink-0 rounded-full px-4 py-2 text-sm font-medium",
-                mobilePkg === p.slug ? "bg-ink text-ivory" : "bg-cream text-stone",
+                mobilePkg === p.slug ? "bg-champagne text-void" : "bg-cream text-stone",
               )}
             >
               {p.name}

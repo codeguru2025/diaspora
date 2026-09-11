@@ -8,12 +8,12 @@ const base =
   "inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-tight transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none text-center";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-ivory hover:bg-charcoal",
+  primary: "bg-champagne text-void font-semibold hover:bg-champagne-deep",
   secondary: "bg-cream text-ink border border-line-strong hover:bg-sand",
   outline: "border border-ink/25 text-ink hover:bg-ink/5",
   ghost: "text-ink hover:bg-ink/5",
-  accent: "bg-champagne text-ink hover:bg-champagne-deep hover:text-ivory",
-  urgent: "bg-terracotta text-ivory hover:bg-[#8f4832]",
+  accent: "bg-champagne text-void hover:bg-champagne-deep hover:text-ivory",
+  urgent: "bg-terracotta text-ivory hover:bg-[#a4573c]",
 };
 
 const sizes: Record<Size, string> = {

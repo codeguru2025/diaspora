@@ -86,7 +86,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "border-ink text-ink"
+                  ? "border-champagne text-champagne"
                   : "border-transparent text-stone hover:text-ink",
               )}
             >

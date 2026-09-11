@@ -157,7 +157,7 @@ export default function EnrollPage() {
         title="Set up your online account."
         intro="One-time activation using your policy number and activation code."
       />
-      <section className="bg-ivory py-12">
+      <section className="bg-void py-12">
         <Container className="max-w-md">
           <Suspense fallback={<Loader2 className="size-5 animate-spin text-stone" />}>
             <EnrollBody />

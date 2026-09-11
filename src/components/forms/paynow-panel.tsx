@@ -169,7 +169,7 @@ export function PayNowPanel({
                 type="button"
                 onClick={() => setMethod(m.key)}
                 className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                  method === m.key ? "border-ink bg-ink/5" : "border-line"
+                  method === m.key ? "border-champagne bg-champagne/5" : "border-line"
                 }`}
               >
                 {m.kind === "mobile" ? (

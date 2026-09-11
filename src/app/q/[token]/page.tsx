@@ -69,7 +69,7 @@ export default async function SavedQuotePage({
             )}
           </div>
 
-          <div className="mt-6 rounded-xl bg-ink p-5 text-ivory">
+          <div className="mt-6 rounded-xl bg-abyss p-5 text-ivory">
             <p className="text-xs uppercase tracking-[0.16em] text-ivory/60">
               Estimated monthly premium
             </p>

@@ -4,11 +4,11 @@ import { Container } from "./container";
 type Tone = "ivory" | "cream" | "sand" | "ink" | "surface";
 
 const tones: Record<Tone, string> = {
-  ivory: "bg-ivory text-charcoal",
+  ivory: "bg-void text-charcoal",
   cream: "bg-cream text-charcoal",
   sand: "bg-sand text-charcoal",
   surface: "bg-surface text-charcoal",
-  ink: "bg-ink text-ivory [&_h1]:text-ivory [&_h2]:text-ivory [&_h3]:text-ivory",
+  ink: "bg-abyss text-ivory [&_h1]:text-ivory [&_h2]:text-ivory [&_h3]:text-ivory",
 };
 
 export function Section({

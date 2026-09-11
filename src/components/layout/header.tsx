@@ -43,12 +43,12 @@ export function Header() {
       className={cn(
         "sticky top-0 z-50 border-b transition-colors",
         scrolled || open
-          ? "border-line bg-ivory/95 backdrop-blur"
-          : "border-transparent bg-ivory",
+          ? "border-line bg-abyss/95 backdrop-blur"
+          : "border-transparent bg-abyss",
       )}
     >
       <Container className="flex h-16 items-center justify-between gap-4 md:h-[4.75rem]">
-        <Logo />
+        <Logo tone="light" />
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           {mainNav.map((item) => {
@@ -101,7 +101,7 @@ export function Header() {
       {/* Mobile panel */}
       <div
         hidden={!open}
-        className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-ivory"
+        className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-abyss"
       >
         <Container className="flex flex-col gap-1 py-6">
           {mainNav.map((item) => (

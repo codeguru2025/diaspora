@@ -19,6 +19,18 @@ export default function ResourcesPage() {
         eyebrow="Resources"
         title="Practical guidance, for a difficult time."
         intro="Planning ahead, supporting a funeral from abroad, or facing a loss now — clear, calm guides written to actually help."
+        visual={
+          <div
+            aria-hidden
+            className="grid aspect-[4/5] w-full place-items-center rounded-3xl border border-line bg-gradient-to-br from-cream via-surface to-sand p-8 text-center shadow-[var(--shadow-raised)]"
+          >
+            <span className="max-w-xs text-sm font-medium uppercase tracking-widest text-mist">
+              Photography direction: a leather-textured keepsake folder embossed with the gold
+              Diaspora Funeral Services mark, styled alongside a protea flower or carved wooden
+              keepsakes. Warm, tactile, no coffin imagery. Asset required from DFS.
+            </span>
+          </div>
+        }
       />
 
       <Section tone="ivory">

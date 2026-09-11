@@ -47,7 +47,7 @@ export function ArrangeFuneralForm() {
         </p>
         <a
           href={site.contact.atNeedPhoneHref}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-ivory"
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-abyss px-5 py-3 text-sm font-medium text-ivory"
         >
           <Phone className="size-4" />
           {site.contact.atNeedPhoneDisplay}

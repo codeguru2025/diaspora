@@ -146,7 +146,7 @@ export function NameItShowcase() {
         ))}
         <Link
           href="/services"
-          className="rounded-full bg-champagne px-4 py-2 text-sm font-medium text-ink hover:bg-champagne-deep hover:text-ivory"
+          className="rounded-full bg-champagne px-4 py-2 text-sm font-medium text-void hover:bg-champagne-deep hover:text-ivory"
         >
           Explore everything we offer →
         </Link>

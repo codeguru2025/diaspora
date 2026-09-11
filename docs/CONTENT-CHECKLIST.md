@@ -6,7 +6,7 @@ in this list has been invented — the code shows placeholders (`CONFIGURE` /
 
 ## 1. Brand & contact (`src/config/site.ts`)
 
-- [ ] Final logo asset (SVG) — currently a text wordmark
+- [x] Final logo asset — DFS-supplied wordmark integrated (`public/brand/`, `src/components/layout/logo.tsx`) with light/dark variants + generated favicon/app icons
 - [ ] General phone number + care-line (at-need) number
 - [ ] WhatsApp number / click-to-chat link
 - [ ] General email + at-need email

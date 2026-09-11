@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 /** Mobile-only sticky action bar (MEGA PROMPT §41). */
 export function StickyCta() {
   return (
-    <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ivory/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
+    <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-line bg-abyss/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
       <div className="mx-auto flex max-w-md gap-2">
         <Button
           href={cta.arrange.href}

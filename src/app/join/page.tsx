@@ -26,7 +26,7 @@ export default async function JoinPage({
         title="A few details, and your family is protected."
         intro="We've kept your package and any services you chose. This takes about five minutes — and you can stop and come back to it."
       />
-      <section className="bg-ivory py-12 md:py-16">
+      <section className="bg-void py-12 md:py-16">
         <Container className="max-w-3xl">
           <JoinFlow initialPackage={initialPackage} />
         </Container>

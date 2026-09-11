@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -9,11 +9,11 @@ import { ConsentBanner } from "@/components/consent-banner";
 import { ResumeBanner } from "@/components/resume-banner";
 import { site } from "@/config/site";
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-fraunces",
-  weight: ["400", "500", "600"],
+  variable: "--font-playfair",
+  weight: ["500", "600", "700"],
 });
 
 const inter = Inter({
@@ -23,7 +23,7 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#fcf9f4",
+  themeColor: "#18181a",
   width: "device-width",
   initialScale: 1,
 };
@@ -60,11 +60,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-dvh antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-ivory"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-abyss focus:px-4 focus:py-2 focus:text-ivory"
         >
           Skip to content
         </a>

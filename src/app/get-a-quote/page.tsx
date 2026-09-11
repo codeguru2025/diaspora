@@ -25,7 +25,7 @@ export default async function GetAQuotePage({
         title="Your family protection plan, in a few minutes."
         intro="Choose a package, tell us who you're protecting, add the services that matter, and we'll send you an indicative premium with no obligation."
       />
-      <section className="bg-ivory py-12 md:py-16">
+      <section className="bg-void py-12 md:py-16">
         <Container className="max-w-3xl">
           <QuoteWizard initialPackage={initialPackage} />
         </Container>

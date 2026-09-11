@@ -4,7 +4,7 @@ import { cta } from "@/config/site";
 
 export function HomeHero() {
   return (
-    <section className="relative overflow-hidden bg-ivory">
+    <section className="relative overflow-hidden bg-void">
       {/* Warm ambient background — no coffin imagery, no stereotype (MEGA PROMPT §19, §48) */}
       <div
         aria-hidden
