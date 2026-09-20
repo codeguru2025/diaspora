@@ -43,15 +43,22 @@ export const pol263Configured = Boolean(BASE && ORG_ID);
 
 /** Reads always resolve to data (POL263 or local fallback) — never an error state. */
 export type Resolved<T> = { data: T; source: "pol263" | "fallback" };
-/** Writes can fail; the caller decides how to surface that to the user. */
+/**
+ * Writes can fail; the caller decides how to surface that to the user.
+ * `source: "pol263"` on the failure branch means POL263 actively rejected the
+ * request (e.g. a failed Turnstile check) — that's real, user-facing feedback,
+ * not an outage, so callers should NOT fall back to the lead-capture safety net
+ * for it. `source: "fallback"` means POL263 was unreachable/misconfigured and
+ * the write was captured locally instead.
+ */
 export type Result<T> =
   | { ok: true; data: T; source: "pol263" | "fallback" }
-  | { ok: false; error: string; source: "fallback"; data: null };
+  | { ok: false; error: string; source: "fallback" | "pol263"; data: null };
 
 async function call<T>(
   path: string,
   init?: RequestInit & { timeoutMs?: number },
-): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
+): Promise<{ ok: true; data: T } | { ok: false; error: string; status?: number; body?: unknown }> {
   if (!BASE) return { ok: false, error: "POL263 not configured" };
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), init?.timeoutMs ?? 8000);
@@ -66,13 +73,29 @@ async function call<T>(
       },
       cache: init?.method && init.method !== "GET" ? "no-store" : (init?.cache ?? "no-store"),
     });
-    if (!res.ok) return { ok: false, error: `POL263 ${res.status}` };
+    if (!res.ok) {
+      let body: unknown;
+      try {
+        body = await res.json();
+      } catch {
+        // Non-JSON error body — leave body undefined, status still tells the caller enough.
+      }
+      return { ok: false, error: `POL263 ${res.status}`, status: res.status, body };
+    }
     return { ok: true, data: (await res.json()) as T };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "network error" };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/** Pulls a human-readable `message` off a failed call's JSON error body, if present. */
+function messageFrom(body: unknown, fallback: string): string {
+  if (body && typeof body === "object" && "message" in body && typeof body.message === "string") {
+    return body.message;
+  }
+  return fallback;
 }
 
 /* ------------------------------------------------------------------ *
@@ -227,6 +250,8 @@ export type LeadInput = {
   message?: string;
   /** Free-form structured payload preserved for the DFS team. */
   context?: Record<string, unknown>;
+  /** Cloudflare Turnstile response token — required on real write actions only. */
+  turnstileToken?: string;
 };
 
 export async function createLead(input: LeadInput): Promise<Result<{ leadId: string | null }>> {
@@ -245,10 +270,22 @@ export async function createLead(input: LeadInput): Promise<Result<{ leadId: str
           email: input.email,
           productInterest: input.productInterest,
           org: ORG_ID,
+          turnstileToken: input.turnstileToken,
         }),
       },
     );
     if (r.ok) return { ok: true, source: "pol263", data: { leadId: r.data.leadId } };
+    // A 400 here is POL263 actively rejecting the request (e.g. failed bot
+    // verification) — that's real feedback for the visitor, not an outage, so
+    // it must NOT fall through to the "captured anyway" safety net below.
+    if (r.status === 400) {
+      return {
+        ok: false,
+        source: "pol263",
+        data: null,
+        error: messageFrom(r.body, "We couldn't verify your request. Please try again."),
+      };
+    }
   }
 
   // Fallback: persist for the DFS team. In this Phase-1 build that means a
@@ -312,22 +349,37 @@ export type RegisterPolicyInput = {
   phone: string;
   dateOfBirth?: string;
   nationalId?: string;
+  /** POL263 requires exactly "MALE" or "FEMALE" (server/routes.ts register-policy handler). */
+  gender?: string;
   productVersionId?: string;
   currency?: string;
   paymentSchedule?: string;
   packageSlug?: string;
   countryOfResidence?: string;
   dependents?: { firstName: string; lastName: string; relationship: string; dateOfBirth?: string }[];
-  beneficiary?: { firstName: string; lastName: string; relationship: string; nationalId?: string };
+  /**
+   * POL263 requires ALL of firstName/lastName/relationship/nationalId/phone or it silently drops
+   * the entire beneficiary with no error — callers should only pass this when genuinely complete.
+   */
+  beneficiary?: { firstName: string; lastName: string; relationship: string; nationalId: string; phone: string };
   serviceProvince?: string;
   selectedServices?: string[];
   consentedAt?: string;
+  /** Cloudflare Turnstile response token — required on real write actions only. */
+  turnstileToken?: string;
 };
 
 export type RegisterPolicyResult = {
   status: "registered" | "captured";
   policyNumber: string | null;
   activationCode: string | null;
+  clientId: string | null;
+  /**
+   * Present whenever registration comes through an agent referral (ours always does) and the
+   * premium is above zero — POL263 issues this automatically alongside the policy. `/pay/[token]`
+   * (this site) consumes it directly: no separate email/SMS step is needed to reach payment.
+   */
+  paymentLink: { token: string; expiresAt: string } | null;
   message: string;
 };
 
@@ -338,12 +390,17 @@ export async function registerPolicy(
   // productVersionId and REF are available we submit the real application; the
   // add-on services / diaspora context ride along as a lead so nothing is lost.
   if (REF && input.productVersionId) {
-    const r = await call<{ policyNumber: string; activationCode: string }>(
+    const r = await call<{
+      policyNumber: string;
+      activationCode: string;
+      clientId?: string;
+      paymentLink?: { token: string; expiresAt: string } | null;
+    }>(
       `/api/public/register-policy`,
       {
         method: "POST",
         body: JSON.stringify({
-          ref: REF,
+          referralCode: REF,
           org: ORG_ID,
           firstName: input.firstName,
           lastName: input.lastName,
@@ -351,15 +408,28 @@ export async function registerPolicy(
           phone: input.phone,
           dateOfBirth: input.dateOfBirth,
           nationalId: input.nationalId,
+          gender: input.gender,
           productVersionId: input.productVersionId,
           currency: input.currency ?? "USD",
           paymentSchedule: input.paymentSchedule ?? "monthly",
           dependents: input.dependents ?? [],
           beneficiary: input.beneficiary,
           consentedAt: input.consentedAt ?? new Date().toISOString(),
+          turnstileToken: input.turnstileToken,
         }),
       },
     );
+    // A 400 here is POL263 actively rejecting the application (e.g. failed bot
+    // verification) — real feedback for the visitor, not an outage, so it must
+    // NOT fall through to the "captured as a lead anyway" safety net below.
+    if (!r.ok && r.status === 400) {
+      return {
+        ok: false,
+        source: "pol263",
+        data: null,
+        error: messageFrom(r.body, "We couldn't verify your request. Please try again."),
+      };
+    }
     if (r.ok) {
       // Best-effort: attach the personalisation context as a lead note.
       await createLead({
@@ -383,6 +453,8 @@ export async function registerPolicy(
           status: "registered",
           policyNumber: r.data.policyNumber,
           activationCode: r.data.activationCode,
+          clientId: r.data.clientId ?? null,
+          paymentLink: r.data.paymentLink ?? null,
           message: "Your application has been created.",
         },
       };
@@ -399,6 +471,7 @@ export async function registerPolicy(
     source: "protect_my_family",
     productInterest: input.packageSlug,
     countryOfResidence: input.countryOfResidence,
+    turnstileToken: input.turnstileToken,
     context: {
       application: true,
       dateOfBirth: input.dateOfBirth,
@@ -410,6 +483,9 @@ export async function registerPolicy(
       paymentSchedule: input.paymentSchedule,
     },
   });
+  // Same rule as above: a real rejection from POL263 must reach the visitor,
+  // not be reported back as a successful "captured" confirmation.
+  if (!lead.ok) return lead;
   return {
     ok: true,
     source: lead.source,
@@ -417,6 +493,8 @@ export async function registerPolicy(
       status: "captured",
       policyNumber: null,
       activationCode: null,
+      clientId: null,
+      paymentLink: null,
       message:
         "We've received your application. A Funeral Care Consultant will confirm the details and your premium, and complete your policy with you.",
     },
@@ -459,4 +537,92 @@ export async function createFuneralRequest(
     context: { priority: "urgent", ...input },
   });
   return { ok: true, source: lead.source, data: { reference: lead.data?.leadId ?? null } };
+}
+
+/* ------------------------------------------------------------------ *
+ * Public payment link ← POL263-hosted, tokenized, no login required   *
+ * The token in the URL path IS the auth — there is no session, no     *
+ * cookie, no fallback: this only makes sense when POL263 is reachable *
+ * and the link is genuine, so unlike everything else in this file     *
+ * there is no local "capture and carry on" safety net for it.         *
+ * ------------------------------------------------------------------ */
+
+export type PaymentLinkStatus = "pending" | "paid" | "expired" | "cancelled" | "not_found";
+
+export type PaymentLinkDetails = {
+  status: PaymentLinkStatus;
+  amount: string;
+  currency: string;
+  policyNumber?: string | null;
+  clientName?: string | null;
+};
+
+export type PaymentMethod = "ecocash" | "onemoney" | "innbucks" | "omari" | "visa_mastercard";
+
+export type InitiatePaymentLinkResult = {
+  redirectUrl?: string;
+  pollUrl?: string;
+  innbucksCode?: string;
+  innbucksExpiry?: string;
+  omariOtpReference?: string;
+  needsOtp?: boolean;
+};
+
+export type PaymentLinkPollResult = {
+  paid: boolean;
+  status?: PaymentLinkStatus | "failed" | "cancelled";
+  error?: string;
+};
+
+function paymentLinkFailure(r: { status?: number; body?: unknown; error: string }): Result<never> {
+  if (r.error === "POL263 not configured") {
+    return { ok: false, source: "fallback", data: null, error: "Online payment isn't connected yet." };
+  }
+  if (r.status === 404) {
+    return { ok: false, source: "pol263", data: null, error: "This payment link wasn't found." };
+  }
+  return {
+    ok: false,
+    source: "pol263",
+    data: null,
+    error: messageFrom(r.body, "We couldn't reach the payment service. Please try again shortly."),
+  };
+}
+
+export async function getPaymentLink(token: string): Promise<Result<PaymentLinkDetails>> {
+  const r = await call<PaymentLinkDetails>(`/api/pay/${encodeURIComponent(token)}`);
+  if (!r.ok) return paymentLinkFailure(r);
+  return { ok: true, source: "pol263", data: r.data };
+}
+
+export async function initiatePaymentLink(
+  token: string,
+  method: PaymentMethod,
+): Promise<Result<InitiatePaymentLinkResult>> {
+  const r = await call<InitiatePaymentLinkResult>(`/api/pay/${encodeURIComponent(token)}/initiate`, {
+    method: "POST",
+    body: JSON.stringify({ method }),
+  });
+  if (!r.ok) return paymentLinkFailure(r);
+  return { ok: true, source: "pol263", data: r.data };
+}
+
+export async function pollPaymentLink(token: string): Promise<Result<PaymentLinkPollResult>> {
+  const r = await call<PaymentLinkPollResult>(`/api/pay/${encodeURIComponent(token)}/poll`, {
+    method: "POST",
+  });
+  if (!r.ok) return paymentLinkFailure(r);
+  return { ok: true, source: "pol263", data: r.data };
+}
+
+export async function submitPaymentLinkOtp(
+  token: string,
+  otp: string,
+): Promise<Result<{ paid: boolean }>> {
+  const r = await call<{ paid: boolean }>(`/api/pay/${encodeURIComponent(token)}/otp`, {
+    method: "POST",
+    body: JSON.stringify({ otp }),
+  });
+  if (!r.ok) return paymentLinkFailure(r);
+  return { ok: true, source: "pol263", data: r.data };
 }

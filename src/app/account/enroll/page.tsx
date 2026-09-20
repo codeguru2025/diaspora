@@ -117,8 +117,20 @@ function EnrollBody() {
         <form onSubmit={enroll}>
           <h2 className="text-xl">Welcome, {firstName}. Set your password.</h2>
           <div className="mt-5 space-y-4">
-            <Field label="New password" required hint="At least 8 characters">
-              <TextInput name="password" type="password" required minLength={8} autoComplete="new-password" />
+            <Field
+              label="New password"
+              required
+              hint="At least 12 characters, with at least one letter and one number"
+            >
+              <TextInput
+                name="password"
+                type="password"
+                required
+                minLength={12}
+                pattern="(?=.*[A-Za-z])(?=.*[0-9]).{12,}"
+                title="At least 12 characters, with at least one letter and one number"
+                autoComplete="new-password"
+              />
             </Field>
             <Field label="Confirm password" required>
               <TextInput name="confirm" type="password" required autoComplete="new-password" />

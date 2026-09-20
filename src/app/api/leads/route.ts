@@ -42,7 +42,15 @@ export async function POST(req: Request) {
     countryOfResidence: body.countryOfResidence ? String(body.countryOfResidence) : undefined,
     message: body.message ? String(body.message) : undefined,
     context: body.context && typeof body.context === "object" ? body.context : undefined,
+    turnstileToken: body.turnstileToken ? String(body.turnstileToken) : undefined,
   });
+
+  // A real rejection from POL263 (e.g. failed bot verification) is genuine
+  // feedback for the visitor — surface it instead of the usual "always succeeds"
+  // fallback response.
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
 
   // Never leak backend detail to the client — the fallback path still "succeeds"
   // from the user's perspective (their enquiry is captured for the DFS team).

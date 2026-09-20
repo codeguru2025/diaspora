@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Field, TextInput, Select } from "@/components/ui/field";
 import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { track } from "@/lib/analytics";
 import { packages } from "@/config/packages";
 import { services } from "@/config/services";
@@ -34,6 +35,9 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
   const [estimate, setEstimate] = useState<QuoteEstimate | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [submit, setSubmit] = useState<"idle" | "submitting" | "done" | "error">("idle");
+  const [submitError, setSubmitError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   useEffect(() => {
     track({ name: "quote_started", entry: initialPackage ? `package:${initialPackage}` : "direct" });
@@ -95,6 +99,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmit("submitting");
+    setSubmitError("");
     const fd = new FormData(e.currentTarget);
     try {
       const res = await fetch("/api/leads", {
@@ -108,6 +113,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           source: "get_a_quote",
           productInterest: pkg ?? undefined,
           countryOfResidence: residence,
+          turnstileToken,
           context: {
             package: pkg,
             adults,
@@ -118,7 +124,8 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           },
         }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
       track({ name: "quote_completed", packageSlug: pkg ?? undefined, serviceCount: chosen.length });
       // Seed the join flow so "Continue to join" is pre-filled.
       writeApplication({
@@ -133,11 +140,15 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           phone: String(fd.get("phone") || ""),
           dateOfBirth: "",
           nationalId: "",
+          gender: "",
         },
       });
       setSubmit("done");
-    } catch {
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setSubmit("error");
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     }
   }
 
@@ -434,14 +445,15 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           </p>
           {submit === "error" && (
             <p className="mt-3 text-sm text-terracotta">
-              Something went wrong. Please try again or call us.
+              {submitError || "Something went wrong. Please try again or call us."}
             </p>
           )}
+          <Turnstile ref={turnstileRef} onToken={setTurnstileToken} className="mt-4" />
           <div className="mt-6 flex gap-3">
             <Button type="button" variant="ghost" onClick={back}>
               Back
             </Button>
-            <Button type="submit" disabled={submit === "submitting"}>
+            <Button type="submit" disabled={submit === "submitting" || !turnstileToken}>
               {submit === "submitting" ? "Sending…" : "Get my quote"}
             </Button>
           </div>

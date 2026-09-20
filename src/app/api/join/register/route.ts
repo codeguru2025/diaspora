@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     email: body.email ? String(body.email).trim() : undefined,
     dateOfBirth: body.dateOfBirth ? String(body.dateOfBirth) : undefined,
     nationalId: body.nationalId ? String(body.nationalId).trim() : undefined,
+    gender: body.gender ? String(body.gender).trim() : undefined,
     productVersionId: body.productVersionId ? String(body.productVersionId) : undefined,
     currency: body.currency ? String(body.currency) : undefined,
     paymentSchedule: body.paymentSchedule ? String(body.paymentSchedule) : undefined,
@@ -36,7 +37,14 @@ export async function POST(req: Request) {
     serviceProvince: body.serviceProvince ? String(body.serviceProvince) : undefined,
     selectedServices: Array.isArray(body.selectedServices) ? body.selectedServices : undefined,
     consentedAt: new Date().toISOString(),
+    turnstileToken: body.turnstileToken ? String(body.turnstileToken) : undefined,
   });
+
+  // A real rejection from POL263 (e.g. failed bot verification) is genuine
+  // feedback for the visitor — surface it instead of a fabricated confirmation.
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
 
   return NextResponse.json(result.data);
 }

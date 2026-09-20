@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Field, TextInput, Select } from "@/components/ui/field";
 import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { track } from "@/lib/analytics";
 import { packages } from "@/config/packages";
 import { services } from "@/config/services";
@@ -27,6 +28,8 @@ type SubmitResult = {
   status: "registered" | "captured";
   policyNumber: string | null;
   activationCode: string | null;
+  clientId?: string | null;
+  paymentLink?: { token: string; expiresAt: string } | null;
   message: string;
 };
 
@@ -39,6 +42,8 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const packageSlug = app.packageSlug ?? initialPackage ?? selection.packageSlug ?? null;
   const chosenServices = app.selectedServices.length ? app.selectedServices : selection.serviceSlugs;
@@ -79,7 +84,19 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
   const accountValid =
     app.applicant.firstName.trim() &&
     app.applicant.lastName.trim() &&
-    app.applicant.phone.trim();
+    app.applicant.phone.trim() &&
+    app.applicant.dateOfBirth.trim() &&
+    app.applicant.gender.trim() &&
+    /^\d+[A-Z]\d{2}$/.test(app.applicant.nationalId.trim());
+
+  // POL263 requires every one of these or it silently drops the whole beneficiary — only send it
+  // when it's genuinely complete, so we never claim to save something that actually wasn't.
+  const beneficiaryComplete =
+    app.beneficiary.firstName.trim() &&
+    app.beneficiary.lastName.trim() &&
+    app.beneficiary.relationship.trim() &&
+    app.beneficiary.phone.trim() &&
+    /^\d+[A-Z]\d{2}$/.test(app.beneficiary.nationalId.trim());
 
   const chosenServiceNames = useMemo(
     () => chosenServices.map((s) => services.find((x) => x.slug === s)?.name).filter(Boolean),
@@ -100,6 +117,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
           phone: app.applicant.phone,
           dateOfBirth: app.applicant.dateOfBirth || undefined,
           nationalId: app.applicant.nationalId || undefined,
+          gender: app.applicant.gender || undefined,
           productVersionId: app.productVersionId || undefined,
           currency: app.currency,
           paymentSchedule: app.paymentSchedule,
@@ -107,8 +125,9 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
           countryOfResidence: app.countryOfResidence,
           serviceProvince: app.serviceProvince || undefined,
           dependents: app.dependents,
-          beneficiary: app.beneficiary.firstName ? app.beneficiary : undefined,
+          beneficiary: beneficiaryComplete ? app.beneficiary : undefined,
           selectedServices: chosenServices,
+          turnstileToken,
         }),
       });
       const data = await res.json();
@@ -120,6 +139,8 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
       setStep(4);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } finally {
       setSubmitting(false);
     }
@@ -153,7 +174,11 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
         <div className="mt-6">
           <p className="text-sm font-medium text-ink">What happens next</p>
           <ol className="mt-2 space-y-2 text-sm text-stone">
-            <li>1. We confirm your details and your premium.</li>
+            {result.paymentLink ? (
+              <li>1. Pay your first premium — no account needed for this step.</li>
+            ) : (
+              <li>1. We confirm your details and your premium.</li>
+            )}
             <li>
               2. {result.activationCode ? "Activate your online account" : "Set up your online account"}{" "}
               to see your policy, pay premiums and manage your family.
@@ -163,14 +188,22 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          {result.paymentLink && (
+            <Button href={`/pay/${result.paymentLink.token}`} variant="accent">
+              Pay now
+            </Button>
+          )}
           {result.activationCode && result.policyNumber ? (
             <Button
               href={`/account/enroll?policy=${encodeURIComponent(result.policyNumber)}&code=${encodeURIComponent(result.activationCode)}`}
+              variant={result.paymentLink ? "outline" : "primary"}
             >
               Activate my account
             </Button>
           ) : (
-            <Button href="/account">Go to my account</Button>
+            <Button href="/account" variant={result.paymentLink ? "outline" : "primary"}>
+              Go to my account
+            </Button>
           )}
           <Button href="/services" variant="outline">
             Keep exploring services
@@ -245,18 +278,37 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
                 autoComplete="email"
               />
             </Field>
-            <Field label="Date of birth">
+            <Field label="Date of birth" required>
               <TextInput
                 value={app.applicant.dateOfBirth}
                 onChange={(e) => setApplicant({ dateOfBirth: e.target.value })}
                 type="date"
+                required
               />
             </Field>
-            <Field label="National ID" hint="Format is validated at confirmation">
+            <Field
+              label="National ID"
+              required
+              hint="Digits + check letter + 2 digits, e.g. 08833089H38"
+            >
               <TextInput
                 value={app.applicant.nationalId}
-                onChange={(e) => setApplicant({ nationalId: e.target.value })}
+                onChange={(e) => setApplicant({ nationalId: e.target.value.toUpperCase() })}
+                pattern="^\d+[A-Z]\d{2}$"
+                title="Digits, then one letter, then exactly 2 digits — e.g. 08833089H38"
+                required
               />
+            </Field>
+            <Field label="Gender" required>
+              <Select
+                value={app.applicant.gender}
+                onChange={(e) => setApplicant({ gender: e.target.value })}
+                required
+              >
+                <option value="">Select…</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+              </Select>
             </Field>
             <Field label="Your country of residence">
               <Select
@@ -411,13 +463,27 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
                 ))}
               </Select>
             </Field>
-            <Field label="Their national ID">
+            <Field label="Their national ID" hint="e.g. 08833089H38">
               <TextInput
                 value={app.beneficiary.nationalId}
-                onChange={(e) => setBeneficiary({ nationalId: e.target.value })}
+                onChange={(e) => setBeneficiary({ nationalId: e.target.value.toUpperCase() })}
+                pattern="^\d+[A-Z]\d{2}$"
+                title="Digits, then one letter, then exactly 2 digits — e.g. 08833089H38"
+              />
+            </Field>
+            <Field label="Their phone number">
+              <TextInput
+                value={app.beneficiary.phone}
+                onChange={(e) => setBeneficiary({ phone: e.target.value })}
+                type="tel"
+                inputMode="tel"
               />
             </Field>
           </div>
+          <p className="mt-3 text-xs text-mist">
+            This section is optional — but if you start it, every field is needed. An incomplete
+            beneficiary is not saved.
+          </p>
         </div>
       )}
 
@@ -445,7 +511,9 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
               label="Beneficiary"
               value={
                 app.beneficiary.firstName
-                  ? `${app.beneficiary.firstName} ${app.beneficiary.lastName} (${app.beneficiary.relationship})`
+                  ? beneficiaryComplete
+                    ? `${app.beneficiary.firstName} ${app.beneficiary.lastName} (${app.beneficiary.relationship})`
+                    : `${app.beneficiary.firstName} ${app.beneficiary.lastName} — incomplete, will not be saved`
                   : "To be confirmed"
               }
             />
@@ -514,6 +582,8 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
           </label>
 
           {error && <p className="mt-3 text-sm text-terracotta">{error}</p>}
+
+          <Turnstile ref={turnstileRef} onToken={setTurnstileToken} className="mt-5" />
         </div>
       )}
 
@@ -536,7 +606,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
             Next
           </Button>
         ) : (
-          <Button type="button" onClick={submit} disabled={!consent || submitting}>
+          <Button type="button" onClick={submit} disabled={!consent || !turnstileToken || submitting}>
             {submitting ? "Submitting…" : "Submit application"}
           </Button>
         )}

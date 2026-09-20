@@ -38,7 +38,7 @@ With none set, the site runs entirely on local fallback.
 | `getBranding()` | `GET /api/public/branding?orgId=` | org identity, currencies, timezone |
 | `getPackages()` / `getRegistrationOptions()` | `GET /api/public/registration-options?ref=` | needs `POL263_PUBLIC_REF`; matched to packages by `products.code` |
 | `getQuote()` | `POST /api/public/quote` | real premium engine; needs `refCode` |
-| `registerPolicy()` | `POST /api/public/register-policy` | needs `refCode` + a real `productVersionId`; otherwise captured as a lead |
+| `registerPolicy()` | `POST /api/public/register-policy` | needs a `referralCode` field (not `refCode` — confirmed by direct testing 2026-09; also requires `nationalId`) + a real `productVersionId`; otherwise captured as a lead |
 | `createLead()` | `POST /api/public/agent-vcard/:refCode/quote-lead` | ref-scoped fallback path |
 
 ## Customer portal — transparent proxy (built)
