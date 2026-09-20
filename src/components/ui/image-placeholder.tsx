@@ -24,15 +24,25 @@ export function ImagePlaceholder({
     <div
       title={direction}
       className={cn(
-        "grid place-items-center rounded-xl bg-gradient-to-br from-cream via-surface to-sand",
+        "relative grid place-items-center overflow-hidden rounded-xl border border-line bg-surface",
         aspect,
         className,
       )}
     >
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M24 3 L45 24 L24 45 L3 24 Z' fill='none' stroke='%23d4af37'/%3E%3C/svg%3E\")",
+        }}
+      />
       <span className="sr-only">{direction}</span>
-      <div aria-hidden className="flex flex-col items-center gap-2 text-mist">
-        <ImageIcon className="size-6" strokeWidth={1.5} />
-        {label && <span className="text-xs font-medium tracking-wide">{label}</span>}
+      <div aria-hidden className="relative flex flex-col items-center gap-2.5 text-champagne-deep/60">
+        <ImageIcon className="size-5" strokeWidth={1.25} />
+        <span className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-mist">
+          {label ?? "Photo to follow"}
+        </span>
       </div>
     </div>
   );

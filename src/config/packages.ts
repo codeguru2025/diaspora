@@ -57,9 +57,7 @@ export const packages: PackageTier[] = [
     pol263ProductCode: null,
     startingPrice: null,
     accent: "sage",
-    // "custom-coffin-lace" is an open-casket interior + inset collage — it reads
-    // as a confusing crop at package-card size, so Essential stays text-only.
-    heroImageSlug: null,
+    heroImageSlug: "essential-casket",
   },
   {
     slug: "classic",

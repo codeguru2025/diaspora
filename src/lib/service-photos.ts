@@ -4,6 +4,8 @@ export const SERVICE_PHOTOS: Record<string, { src: string; width: number; height
   "custom-casket": { src: "/images/caskets/custom-casket.jpg", width: 810, height: 1080 },
   "custom-coffin-lace": { src: "/images/caskets/custom-coffin-lace.jpg", width: 1080, height: 1080 },
   "custom-casket-showcase": { src: "/images/caskets/custom-casket-showcase.jpg", width: 810, height: 1080 },
+  "essential-casket": { src: "/images/caskets/essential-casket.jpg", width: 867, height: 1156 },
+  "essential-casket-open": { src: "/images/caskets/essential-casket-open.jpg", width: 867, height: 1156 },
   // From a real DFS-conducted service. Any name/date text is blurred before use.
   "decor-and-tents": { src: "/images/tribute/img4596.jpg", width: 1280, height: 853 },
   "memorial-banner": { src: "/images/tribute/img4591.jpg", width: 1280, height: 567 },
@@ -23,6 +25,7 @@ export const REAL_GALLERY_PHOTOS: Record<string, { src: string; width: number; h
 
 /** Every real casket photo DFS has supplied so far, for the casket gallery slideshow. */
 export const CASKET_GALLERY_PHOTOS: { src: string; width: number; height: number; caption: string }[] = [
+  { src: "/images/caskets/essential-casket.jpg", width: 867, height: 1156, caption: "Essential Casket" },
   { src: "/images/caskets/premium-casket.jpg", width: 1080, height: 890, caption: "Premium Casket" },
   { src: "/images/caskets/custom-casket.jpg", width: 810, height: 1080, caption: "Custom-Made Casket" },
   { src: "/images/caskets/custom-coffin-lace.jpg", width: 1080, height: 1080, caption: "Personalised Coffin Lace" },
