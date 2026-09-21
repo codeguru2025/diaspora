@@ -68,8 +68,16 @@ needed; the portal, join flow and quote engine all switch from fallback to live.
   ref-optional variants below.)
 - Deploy POL263 so `POL263_API_BASE_URL` resolves to the DFS tenant host, and
   configure PayNow for that tenant.
-- Map each package's `pol263ProductCode` (`src/config/packages.ts`) to the real
-  `products.code` values once products are configured.
+- ~~Map each package's `pol263ProductCode`~~ done 2026-09-21 — POL263 products use
+  the same codes as the package slugs (`ESSENTIAL`/`CLASSIC`/`PRESTIGE`/`BESPOKE`).
+  `getQuote()`/`/api/quote` now resolve `packageSlug` → `pol263ProductCode` →
+  `product_versions.id` via `resolveProductVersionId()` in `pol263.ts` before
+  calling the real quote engine.
+- ~~Premiums still need to be entered on the POL263 side~~ done 2026-09-21 —
+  age-band rate cards (`age_band_rate_cards`, keyed by product version + age
+  band + currency, `ratePerThousand` against each product's `coverAmount`) are
+  configured for all four products. Live-verified via `/api/quote`: Essential
+  $5.00/mo, Classic $31.25/mo, Prestige $125.00/mo, Bespoke $500.00/mo.
 
 ## Endpoints still needed (additive, org-scoped, ref-optional)
 

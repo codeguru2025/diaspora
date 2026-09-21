@@ -24,6 +24,8 @@ export async function POST(req: Request) {
     contactEmail: body.contactEmail ? String(body.contactEmail).trim() : undefined,
     relationshipToDeceased: body.relationshipToDeceased ? String(body.relationshipToDeceased) : undefined,
     deceasedName: body.deceasedName ? String(body.deceasedName) : undefined,
+    deceasedAge: typeof body.deceasedAge === "number" ? body.deceasedAge : undefined,
+    deceasedSex: body.deceasedSex ? String(body.deceasedSex) : undefined,
     isExistingPolicyholder: body.isExistingPolicyholder,
     policyNumber: body.policyNumber ? String(body.policyNumber) : undefined,
     serviceProvince: body.serviceProvince ? String(body.serviceProvince) : undefined,
@@ -31,7 +33,12 @@ export async function POST(req: Request) {
     neededBy: body.neededBy ? String(body.neededBy) : undefined,
     callerLocation: body.callerLocation ? String(body.callerLocation) : undefined,
     notes: body.notes ? String(body.notes) : undefined,
+    requestedAddOnIds: Array.isArray(body.requestedAddOnIds) ? body.requestedAddOnIds : undefined,
+    turnstileToken: body.turnstileToken ? String(body.turnstileToken) : undefined,
   });
 
-  return NextResponse.json({ ok: true, reference: result.data?.reference ?? null });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+  return NextResponse.json({ ok: true, reference: result.data.reference, quotation: result.data.quotation });
 }

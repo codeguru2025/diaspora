@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Phone, MessageCircle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { ArrangeFuneralForm } from "@/components/forms/arrange-funeral-form";
@@ -61,6 +62,13 @@ export default function ArrangeAFuneralPage() {
               </div>
             ))}
           </div>
+          <p className="mt-8 rounded-xl border border-line bg-surface p-4 text-sm text-stone">
+            Not urgent, or just want a sense of cost first?{" "}
+            <Link href="/quote/cash" className="font-medium text-ink underline underline-offset-2">
+              Price out specific services
+            </Link>{" "}
+            and get a live estimate before you talk to anyone.
+          </p>
         </Container>
       </section>
     </>

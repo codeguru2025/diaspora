@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getQuote, type QuoteRequest } from "@/lib/pol263";
+import { getQuote, resolveProductVersionId, type QuoteRequest } from "@/lib/pol263";
 
 export async function POST(req: Request) {
   let body: QuoteRequest & { packageSlug?: string };
@@ -9,8 +9,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
+  const productVersionId =
+    body.productVersionId ?? (body.packageSlug ? await resolveProductVersionId(body.packageSlug) : undefined);
+
   const res = await getQuote({
-    productVersionId: body.productVersionId,
+    productVersionId,
     policyholderDateOfBirth: body.policyholderDateOfBirth,
     memberCount: typeof body.memberCount === "number" ? body.memberCount : undefined,
     dependentDateOfBirths: Array.isArray(body.dependentDateOfBirths)

@@ -149,19 +149,29 @@ export async function getPackages(): Promise<Resolved<ResolvedPackage[]>> {
   if (!REF) return { data: fallback, source: "fallback" };
 
   const r = await call<{
-    products: { id: string; code: string; name: string; versions: { premiumMonthlyUsd?: string | null }[] }[];
+    products: { id: string; code: string; name: string; versions: { id: string; premiumMonthlyUsd?: string | null }[] }[];
   }>(`/api/public/registration-options?ref=${encodeURIComponent(REF)}`);
   if (!r.ok) return { data: fallback, source: "fallback" };
 
   const byCode = new Map(r.data.products.map((p) => [p.code, p]));
-  const resolved = localPackages.map<ResolvedPackage>((p) => {
-    const match = p.pol263ProductCode ? byCode.get(p.pol263ProductCode) : undefined;
-    const monthly = match?.versions?.[0]?.premiumMonthlyUsd;
-    return {
-      ...p,
-      price: monthly ? { amount: String(monthly), currency: "USD", schedule: "monthly" } : null,
-    };
-  });
+  const resolved = await Promise.all(
+    localPackages.map<Promise<ResolvedPackage>>(async (p) => {
+      const match = p.pol263ProductCode ? byCode.get(p.pol263ProductCode) : undefined;
+      const productVersionId = match?.versions?.[0]?.id;
+      // The flat premiumMonthlyUsd field is unused for individual_age_rated products (the DFS
+      // model) — real pricing lives in age_band_rate_cards and only the quote engine can compute
+      // it. No policyholderDateOfBirth is passed here on purpose: the engine treats an unknown age
+      // as the standard adult (21-65) band, giving the representative "from" figure for the card —
+      // never a fabricated number, always whatever POL263 actually has configured right now.
+      if (!productVersionId) return { ...p, price: null };
+      const quote = await getQuote({ productVersionId, memberCount: 1 });
+      if (!quote.data.premium) return { ...p, price: null };
+      return {
+        ...p,
+        price: { amount: quote.data.premium, currency: quote.data.currency, schedule: quote.data.paymentSchedule },
+      };
+    }),
+  );
   return { data: resolved, source: "pol263" };
 }
 
@@ -169,13 +179,32 @@ export async function getPackages(): Promise<Resolved<ResolvedPackage[]>> {
  * Service catalogue ← POL263 add_ons / price_book (extended model)   *
  * ------------------------------------------------------------------ */
 
-export async function getServiceCatalogue() {
-  // NOT-YET-AVAILABLE: the POL263 `add_ons` model needs the additive fields
-  // described in docs/POL263-INTEGRATION.md (category, image, lead time, supplier,
-  // upsell copy, bundle membership, richer pricing modes) before this can be
-  // sourced remotely. Until then the local catalogue is authoritative for
-  // presentation and POL263 holds only the priced line items.
-  return { ok: true as const, data: localServices, source: "fallback" as const };
+export type ResolvedService = (typeof localServices)[number] & {
+  /** Join key to POL263 `add_ons.id` — null until matched by exact name. */
+  pol263AddOnId: string | null;
+  /** Real cash value from POL263, or null when not priced yet ("price TBC"). */
+  cashValue: string | null;
+};
+
+export async function getServiceCatalogue(): Promise<Resolved<ResolvedService[]>> {
+  const fallback: ResolvedService[] = localServices.map((s) => ({ ...s, pol263AddOnId: null, cashValue: null }));
+  if (!REF) return { data: fallback, source: "fallback" };
+
+  // The local catalogue stays authoritative for presentation (category copy, includes,
+  // related services, bundles, images) — none of that lives in POL263. This only joins
+  // in the two things POL263 actually owns: the real add-on id (needed for
+  // requestedAddOnIds on the quote/register/funeral-request endpoints) and its cash
+  // value, matched by exact name against `script/seed-diaspora-catalogue.ts`'s seed.
+  const opts = await getRegistrationOptions();
+  if (opts.data.addOns.length === 0) return { data: fallback, source: opts.source };
+
+  const byName = new Map(opts.data.addOns.map((a) => [a.name, a]));
+  const resolved = localServices.map<ResolvedService>((s) => {
+    const match = byName.get(s.name);
+    const cashValue = match?.cashValue && Number(match.cashValue) > 0 ? match.cashValue : null;
+    return { ...s, pol263AddOnId: match?.id ?? null, cashValue };
+  });
+  return { data: resolved, source: "pol263" };
 }
 
 /* ------------------------------------------------------------------ *
@@ -198,7 +227,23 @@ export type QuoteResponse = {
   paymentSchedule: string;
   estimate: boolean;
   note?: string;
+  productVersionId?: string;
 };
+
+/**
+ * Join key: DFS package slug → POL263 `products.code` (`pol263ProductCode` in
+ * `src/config/packages.ts`) → the product's current `product_versions.id`, via the
+ * same `registration-options` call `getPackages()` uses. The quote engine and
+ * `register-policy` both need this real id — a package slug alone means nothing
+ * to POL263.
+ */
+export async function resolveProductVersionId(packageSlug: string): Promise<string | undefined> {
+  const pkg = localPackages.find((p) => p.slug === packageSlug);
+  if (!pkg?.pol263ProductCode) return undefined;
+  const opts = await getRegistrationOptions();
+  const product = opts.data.products.find((p) => p.code === pkg.pol263ProductCode);
+  return product?.versions?.[0]?.id;
+}
 
 export async function getQuote(req: QuoteRequest): Promise<Resolved<QuoteResponse>> {
   const fallback: QuoteResponse = {
@@ -222,6 +267,7 @@ export async function getQuote(req: QuoteRequest): Promise<Resolved<QuoteRespons
       currency: r.data.currency,
       paymentSchedule: r.data.paymentSchedule,
       estimate: true,
+      productVersionId: req.productVersionId,
       note: "Indicative premium from the DFS pricing engine. Confirmed at application.",
     },
   };
@@ -301,6 +347,16 @@ export async function createLead(input: LeadInput): Promise<Result<{ leadId: str
  * Registration options — products + branches for the join flow       *
  * ------------------------------------------------------------------ */
 
+export type RegistrationOptionsAddOn = {
+  id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  pricingMode: string;
+  /** Raw cash value from POL263 (`add_ons.coverIncrementAmount`) — null/0 means not priced yet. */
+  cashValue?: string | null;
+};
+
 export type RegistrationOptions = {
   configured: boolean;
   products: {
@@ -311,6 +367,7 @@ export type RegistrationOptions = {
   }[];
   branches: { id: string; name: string }[];
   nationalIdFormat: string | null;
+  addOns: RegistrationOptionsAddOn[];
 };
 
 export async function getRegistrationOptions(): Promise<Resolved<RegistrationOptions>> {
@@ -319,12 +376,14 @@ export async function getRegistrationOptions(): Promise<Resolved<RegistrationOpt
     products: [],
     branches: [],
     nationalIdFormat: null,
+    addOns: [],
   };
   if (!REF) return { data: fallback, source: "fallback" };
   const r = await call<{
     products: RegistrationOptions["products"];
     branches: RegistrationOptions["branches"];
     nationalIdFormat?: string;
+    addOns?: RegistrationOptionsAddOn[];
   }>(`/api/public/registration-options?ref=${encodeURIComponent(REF)}`);
   if (!r.ok) return { data: fallback, source: "fallback" };
   return {
@@ -334,6 +393,7 @@ export async function getRegistrationOptions(): Promise<Resolved<RegistrationOpt
       products: r.data.products ?? [],
       branches: r.data.branches ?? [],
       nationalIdFormat: r.data.nationalIdFormat ?? null,
+      addOns: r.data.addOns ?? [],
     },
   };
 }
@@ -511,6 +571,8 @@ export type FuneralRequestInput = {
   contactEmail?: string;
   relationshipToDeceased?: string;
   deceasedName?: string;
+  deceasedAge?: number;
+  deceasedSex?: string;
   isExistingPolicyholder?: "yes" | "no" | "unsure";
   policyNumber?: string;
   serviceProvince?: string;
@@ -518,25 +580,108 @@ export type FuneralRequestInput = {
   neededBy?: string;
   callerLocation?: string;
   notes?: string;
+  /** POL263 `add_ons.id`s — the cash-service selection, if any (see getServiceCatalogue). */
+  requestedAddOnIds?: string[];
+  /** Cloudflare Turnstile response token — required on the real (non-fallback) path. */
+  turnstileToken?: string;
 };
 
-export async function createFuneralRequest(
-  input: FuneralRequestInput,
-): Promise<Result<{ reference: string | null }>> {
-  // NOT-YET-AVAILABLE: POST /api/public/funeral-request { orgId, ... } which
-  // should create a high-priority lead (and optionally a draft funeral_case) and
-  // trigger an internal SMS/notification to the DFS at-need team. Until then this
-  // routes through createLead with source=arrange_a_funeral and priority context.
+export type FuneralQuotationItem = { description: string; quantity: string; unitPrice: string; lineTotal: string };
+export type FuneralQuotation = {
+  id: string;
+  quotationNumber: string;
+  currency: string;
+  total?: string;
+  items?: FuneralQuotationItem[];
+} | null;
+
+export type FuneralRequestResult = { reference: string; quotation: FuneralQuotation };
+
+export async function createFuneralRequest(input: FuneralRequestInput): Promise<Result<FuneralRequestResult>> {
+  const firstName = input.contactName.split(" ")[0] || input.contactName;
+  const lastName = input.contactName.split(" ").slice(1).join(" ") || "(not given)";
+
+  if (REF) {
+    const r = await call<{ reference: string; leadId: string; quotation: FuneralQuotation }>(
+      `/api/public/funeral-request`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          refCode: REF,
+          org: ORG_ID,
+          firstName,
+          lastName,
+          phone: input.contactPhone,
+          email: input.contactEmail,
+          deceasedName: input.deceasedName,
+          deceasedAge: input.deceasedAge,
+          deceasedSex: input.deceasedSex,
+          message:
+            [input.relationshipToDeceased && `Relationship: ${input.relationshipToDeceased}`, input.notes]
+              .filter(Boolean)
+              .join(" — ") || undefined,
+          requestedAddOnIds: input.requestedAddOnIds ?? [],
+          turnstileToken: input.turnstileToken,
+        }),
+      },
+    );
+    // Same rule as every other real write here: a 400 is POL263 actively rejecting the
+    // request (failed bot verification) — real feedback for the visitor, not an outage.
+    if (!r.ok && r.status === 400) {
+      return {
+        ok: false,
+        source: "pol263",
+        data: null,
+        error: messageFrom(r.body, "We couldn't verify your request. Please try again."),
+      };
+    }
+    if (r.ok) {
+      return { ok: true, source: "pol263", data: { reference: r.data.reference, quotation: r.data.quotation } };
+    }
+  }
+
+  // Fallback: POL263 unreachable/misconfigured — capture as a lead so a Funeral Care
+  // Consultant can follow up; the cash-service selection rides along as context since
+  // there's no quotation engine to price it locally.
   const lead = await createLead({
-    firstName: input.contactName.split(" ")[0] || input.contactName,
-    lastName: input.contactName.split(" ").slice(1).join(" ") || "(not given)",
+    firstName,
+    lastName,
     phone: input.contactPhone,
     email: input.contactEmail,
     source: "arrange_a_funeral",
     message: input.notes,
     context: { priority: "urgent", ...input },
+    turnstileToken: input.turnstileToken,
   });
-  return { ok: true, source: lead.source, data: { reference: lead.data?.leadId ?? null } };
+  if (!lead.ok) return lead;
+  return { ok: true, source: lead.source, data: { reference: lead.data?.leadId ?? "pending", quotation: null } };
+}
+
+/** Live, read-only running total as a visitor ticks/unticks cash services — nothing is
+ *  persisted, safe to call on every selection change. Mirrors getQuote()'s role for the
+ *  insurance premium estimate. */
+export async function getFuneralRequestEstimate(
+  addOnIds: string[],
+): Promise<Resolved<{ items: { addOnId: string; name: string; unitPrice: string }[]; total: string; currency: string }>> {
+  const fallback = { items: [], total: "0.00", currency: "USD" };
+  if (!REF || addOnIds.length === 0) return { data: fallback, source: "fallback" };
+  const r = await call<{ items: { addOnId: string; name: string; unitPrice: string }[]; total: string; currency: string }>(
+    `/api/public/funeral-request-estimate`,
+    { method: "POST", body: JSON.stringify({ refCode: REF, org: ORG_ID, requestedAddOnIds: addOnIds }) },
+  );
+  if (!r.ok) return { data: fallback, source: "fallback" };
+  return { data: r.data, source: "pol263" };
+}
+
+/** Fetches a previously-submitted cash-service quotation back, e.g. for a shareable
+ *  `/quote/cash/[id]` link. */
+export async function getFuneralRequestById(id: string): Promise<Resolved<FuneralQuotation>> {
+  if (!REF) return { data: null, source: "fallback" };
+  const r = await call<NonNullable<FuneralQuotation>>(
+    `/api/public/funeral-request/${encodeURIComponent(id)}?ref=${encodeURIComponent(REF)}&org=${encodeURIComponent(ORG_ID)}`,
+  );
+  if (!r.ok) return { data: null, source: "fallback" };
+  return { data: r.data, source: "pol263" };
 }
 
 /* ------------------------------------------------------------------ *

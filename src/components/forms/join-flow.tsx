@@ -23,7 +23,13 @@ import {
 const STEPS = ["Your account", "Your family", "Beneficiary", "Review", "Confirmation"] as const;
 const RELATIONSHIPS = ["Spouse", "Child", "Parent", "Sibling", "Grandparent", "Grandchild", "Other"];
 
-type Estimate = { premium: string | null; currency: string; paymentSchedule: string; note?: string };
+type Estimate = {
+  premium: string | null;
+  currency: string;
+  paymentSchedule: string;
+  note?: string;
+  productVersionId?: string;
+};
 type SubmitResult = {
   status: "registered" | "captured";
   policyNumber: string | null;
@@ -71,7 +77,12 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
       }),
     })
       .then((r) => r.json())
-      .then(setEstimate)
+      .then((data: Estimate) => {
+        setEstimate(data);
+        if (data.productVersionId && data.productVersionId !== app.productVersionId) {
+          writeApplication({ productVersionId: data.productVersionId });
+        }
+      })
       .catch(() => setEstimate(null));
   }, [step, packageSlug, app.dependents, app.currency, app.paymentSchedule]);
 
