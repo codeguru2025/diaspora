@@ -37,6 +37,9 @@ export async function proxyClientAuth(
   if (cookie) headers.cookie = cookie;
   const ct = req.headers.get("content-type");
   if (ct) headers["content-type"] = ct;
+  // POL263 CSRF (csurf) double-submit token — see xsrfToken() in portal-client.
+  const xsrf = req.headers.get("x-xsrf-token");
+  if (xsrf) headers["x-xsrf-token"] = xsrf;
   // Forward the caller's IP for POL263 rate-limiting / audit.
   const fwd = req.headers.get("x-forwarded-for");
   if (fwd) headers["x-forwarded-for"] = fwd;

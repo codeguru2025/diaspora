@@ -21,10 +21,32 @@ export async function portalGet<T>(path: string): Promise<T> {
   return data as T;
 }
 
+function readXsrfCookie(): string | null {
+  const m = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+/**
+ * POL263 runs csurf (double-submit cookie): any response sets `_csrf` + a readable `XSRF-TOKEN`
+ * cookie (relayed onto this origin by the proxy), and every write must echo XSRF-TOKEN back as
+ * `x-xsrf-token`. On a first visit there's no cookie yet, so prime it with a cheap GET.
+ */
+export async function xsrfToken(): Promise<string | null> {
+  const existing = readXsrfCookie();
+  if (existing) return existing;
+  await fetch("/api/portal/tenant", { headers: { accept: "application/json" } }).catch(() => {});
+  return readXsrfCookie();
+}
+
 export async function portalPost<T>(path: string, body?: unknown): Promise<T> {
+  const token = await xsrfToken();
   const res = await fetch(`/api/portal/${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json", accept: "application/json" },
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+      ...(token ? { "x-xsrf-token": token } : {}),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (res.status === 503) throw new PortalError("unconfigured", "Portal not connected");

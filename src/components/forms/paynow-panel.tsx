@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field, TextInput } from "@/components/ui/field";
 import { formatPrice } from "@/lib/format";
 import { track } from "@/lib/analytics";
+import { xsrfToken } from "@/lib/portal-client";
 
 type Method = "ecocash" | "onemoney" | "innbucks" | "visa_mastercard";
 
@@ -87,9 +88,11 @@ export function PayNowPanel({
     setMessage("");
     track({ name: "payment_started" });
     try {
+      const token = await xsrfToken();
+      const headers = { "content-type": "application/json", ...(token ? { "x-xsrf-token": token } : {}) };
       const created = await fetch("/api/portal/payment-intents", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify({
           policyId,
           amount,
@@ -108,7 +111,7 @@ export function PayNowPanel({
 
       const init = await fetch(`/api/portal/payment-intents/${intentId.current}/initiate`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify({ method, payerPhone: phone || undefined }),
       });
       const ij = await init.json();
