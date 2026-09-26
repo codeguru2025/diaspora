@@ -1,44 +1,16 @@
 import { NextResponse } from "next/server";
-import { registerPolicy, type RegisterPolicyInput } from "@/lib/pol263";
+import { registerPolicy } from "@/lib/pol263";
+import { parseBody, registerSchema } from "@/lib/api-schemas";
+import { LIMITS, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
-  let body: Partial<RegisterPolicyInput>;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const limited = rateLimit(req, LIMITS.submit);
+  if (limited) return limited;
 
-  const firstName = String(body.firstName || "").trim();
-  const lastName = String(body.lastName || "").trim();
-  const phone = String(body.phone || "").trim();
-  if (!firstName || !lastName || !phone) {
-    return NextResponse.json(
-      { error: "Your name and phone number are required." },
-      { status: 400 },
-    );
-  }
+  const body = await parseBody(req, registerSchema);
+  if (!body.ok) return body.response;
 
-  const result = await registerPolicy({
-    firstName,
-    lastName,
-    phone,
-    email: body.email ? String(body.email).trim() : undefined,
-    dateOfBirth: body.dateOfBirth ? String(body.dateOfBirth) : undefined,
-    nationalId: body.nationalId ? String(body.nationalId).trim() : undefined,
-    gender: body.gender ? String(body.gender).trim() : undefined,
-    productVersionId: body.productVersionId ? String(body.productVersionId) : undefined,
-    currency: body.currency ? String(body.currency) : undefined,
-    paymentSchedule: body.paymentSchedule ? String(body.paymentSchedule) : undefined,
-    packageSlug: body.packageSlug ? String(body.packageSlug) : undefined,
-    countryOfResidence: body.countryOfResidence ? String(body.countryOfResidence) : undefined,
-    dependents: Array.isArray(body.dependents) ? body.dependents : undefined,
-    beneficiary: body.beneficiary,
-    serviceProvince: body.serviceProvince ? String(body.serviceProvince) : undefined,
-    selectedServices: Array.isArray(body.selectedServices) ? body.selectedServices : undefined,
-    consentedAt: new Date().toISOString(),
-    turnstileToken: body.turnstileToken ? String(body.turnstileToken) : undefined,
-  });
+  const result = await registerPolicy({ ...body.data, consentedAt: new Date().toISOString() });
 
   // A real rejection from POL263 (e.g. failed bot verification) is genuine
   // feedback for the visitor — surface it instead of a fabricated confirmation.

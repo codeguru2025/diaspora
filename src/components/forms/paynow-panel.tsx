@@ -48,37 +48,44 @@ export function PayNowPanel({
   const intentId = useRef<string | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const alive = useRef(true);
+
   useEffect(() => {
+    alive.current = true;
     return () => {
+      alive.current = false;
       if (pollTimer.current) clearTimeout(pollTimer.current);
     };
   }, []);
 
   const poll = useCallback(
-    async (id: string, attempt = 0) => {
-      try {
-        const res = await fetch(`/api/portal/payment-intents/${id}/status`);
-        const data = await res.json();
-        if (data.paid || data.status === "paid") {
-          setPhase("paid");
-          track({ name: "payment_completed" });
-          onPaid?.();
-          return;
+    async (id: string) => {
+      for (let attempt = 0; attempt <= 40; attempt++) {
+        if (!alive.current) return;
+        try {
+          const res = await fetch(`/api/portal/payment-intents/${encodeURIComponent(id)}/status`);
+          const data = await res.json();
+          if (data.paid || data.status === "paid") {
+            setPhase("paid");
+            track({ name: "payment_completed" });
+            onPaid?.();
+            return;
+          }
+          if (data.status === "failed" || data.status === "cancelled" || data.status === "expired") {
+            setPhase("failed");
+            setMessage(data.error || "The payment did not go through. Please try again.");
+            return;
+          }
+        } catch {
+          /* transient — keep polling */
         }
-        if (data.status === "failed" || data.status === "cancelled" || data.status === "expired") {
-          setPhase("failed");
-          setMessage(data.error || "The payment did not go through. Please try again.");
-          return;
-        }
-      } catch {
-        /* transient — keep polling */
+        await new Promise((resolve) => {
+          pollTimer.current = setTimeout(resolve, 4000);
+        });
       }
-      if (attempt > 40) {
-        setPhase("failed");
-        setMessage("We didn't get confirmation in time. Check your payments in a few minutes.");
-        return;
-      }
-      pollTimer.current = setTimeout(() => poll(id, attempt + 1), 4000);
+      if (!alive.current) return;
+      setPhase("failed");
+      setMessage("We didn't get confirmation in time. Check your payments in a few minutes.");
     },
     [onPaid],
   );
@@ -129,7 +136,7 @@ export function PayNowPanel({
           ? "Open your InnBucks app and authorise the payment with the code below."
           : "Check your phone — approve the payment prompt to continue.",
       );
-      poll(intentId.current);
+      void poll(intentId.current);
     } catch (e) {
       setPhase("failed");
       setMessage(e instanceof Error ? e.message : "Something went wrong. Please try again.");

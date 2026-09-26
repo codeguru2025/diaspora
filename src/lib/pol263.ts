@@ -55,23 +55,29 @@ export type Result<T> =
   | { ok: true; data: T; source: "pol263" | "fallback" }
   | { ok: false; error: string; source: "fallback" | "pol263"; data: null };
 
+/** How long read-only POL263 data (products, branding, "from" prices) is reused across requests. */
+const READ_REVALIDATE_SECONDS = 300;
+
 async function call<T>(
   path: string,
-  init?: RequestInit & { timeoutMs?: number },
+  init?: RequestInit & { timeoutMs?: number; revalidate?: number },
 ): Promise<{ ok: true; data: T } | { ok: false; error: string; status?: number; body?: unknown }> {
   if (!BASE) return { ok: false, error: "POL263 not configured" };
+  const { timeoutMs, revalidate, ...fetchInit } = init ?? {};
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), init?.timeoutMs ?? 8000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs ?? 8000);
   try {
     const res = await fetch(`${BASE}${path}`, {
-      ...init,
+      ...fetchInit,
       signal: controller.signal,
       headers: {
         "content-type": "application/json",
         ...(TOKEN ? { authorization: `Bearer ${TOKEN}` } : {}),
-        ...(init?.headers || {}),
+        ...(fetchInit.headers || {}),
       },
-      cache: init?.method && init.method !== "GET" ? "no-store" : (init?.cache ?? "no-store"),
+      // Reads that are the same for every visitor opt in to the data cache; everything
+      // else (writes, per-visitor quotes, payment links) always goes to POL263.
+      ...(revalidate ? { next: { revalidate } } : { cache: "no-store" as const }),
     });
     if (!res.ok) {
       let body: unknown;
@@ -124,7 +130,9 @@ export async function getBranding(): Promise<Resolved<Branding>> {
     enabledCurrencies: ["USD"],
     timezone: "Africa/Harare",
   };
-  const r = await call<Partial<Branding>>(`/api/public/branding?orgId=${encodeURIComponent(ORG_ID)}`);
+  const r = await call<Partial<Branding>>(`/api/public/branding?orgId=${encodeURIComponent(ORG_ID)}`, {
+    revalidate: READ_REVALIDATE_SECONDS,
+  });
   if (!r.ok) return { data: fallback, source: "fallback" };
   return {
     source: "pol263",
@@ -148,12 +156,10 @@ export async function getPackages(): Promise<Resolved<ResolvedPackage[]>> {
   // is ref-scoped; a `/api/public/products?orgId=` route is the clean addition.
   if (!REF) return { data: fallback, source: "fallback" };
 
-  const r = await call<{
-    products: { id: string; code: string; name: string; versions: { id: string; premiumMonthlyUsd?: string | null }[] }[];
-  }>(`/api/public/registration-options?ref=${encodeURIComponent(REF)}`);
-  if (!r.ok) return { data: fallback, source: "fallback" };
+  const opts = await getRegistrationOptions();
+  if (opts.source === "fallback") return { data: fallback, source: "fallback" };
 
-  const byCode = new Map(r.data.products.map((p) => [p.code, p]));
+  const byCode = new Map(opts.data.products.map((p) => [p.code, p]));
   const resolved = await Promise.all(
     localPackages.map<Promise<ResolvedPackage>>(async (p) => {
       const match = p.pol263ProductCode ? byCode.get(p.pol263ProductCode) : undefined;
@@ -164,7 +170,7 @@ export async function getPackages(): Promise<Resolved<ResolvedPackage[]>> {
       // as the standard adult (21-65) band, giving the representative "from" figure for the card —
       // never a fabricated number, always whatever POL263 actually has configured right now.
       if (!productVersionId) return { ...p, price: null };
-      const quote = await getQuote({ productVersionId, memberCount: 1 });
+      const quote = await getQuote({ productVersionId, memberCount: 1 }, { revalidate: READ_REVALIDATE_SECONDS });
       if (!quote.data.premium) return { ...p, price: null };
       return {
         ...p,
@@ -245,7 +251,14 @@ export async function resolveProductVersionId(packageSlug: string): Promise<stri
   return product?.versions?.[0]?.id;
 }
 
-export async function getQuote(req: QuoteRequest): Promise<Resolved<QuoteResponse>> {
+/**
+ * `opts.revalidate` is only for inputs that are the same for every visitor (the package
+ * cards' "from" price) — never pass it for a visitor's own quote.
+ */
+export async function getQuote(
+  req: QuoteRequest,
+  opts?: { revalidate?: number },
+): Promise<Resolved<QuoteResponse>> {
   const fallback: QuoteResponse = {
     premium: null,
     currency: req.currency ?? "USD",
@@ -257,7 +270,7 @@ export async function getQuote(req: QuoteRequest): Promise<Resolved<QuoteRespons
 
   const r = await call<{ premium: string; currency: string; paymentSchedule: string }>(
     `/api/public/quote`,
-    { method: "POST", body: JSON.stringify({ refCode: REF, org: ORG_ID, ...req }) },
+    { method: "POST", body: JSON.stringify({ refCode: REF, org: ORG_ID, ...req }), revalidate: opts?.revalidate },
   );
   if (!r.ok) return { data: fallback, source: "fallback" };
   return {
@@ -300,11 +313,63 @@ export type LeadInput = {
   turnstileToken?: string;
 };
 
-export async function createLead(input: LeadInput): Promise<Result<{ leadId: string | null }>> {
+/**
+ * The quote-lead endpoint has no structured fields for the enquiry itself, so the
+ * message, country and context are folded into one readable note for the DFS team.
+ */
+export function leadNote(input: Pick<LeadInput, "message" | "countryOfResidence" | "context">): string | undefined {
+  const lines: string[] = [];
+  if (input.message) lines.push(input.message);
+  if (input.countryOfResidence) lines.push(`Country of residence: ${input.countryOfResidence}`);
+  for (const [key, value] of Object.entries(input.context ?? {})) {
+    if (value === undefined || value === null || value === "") continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    lines.push(`${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`);
+  }
+  return lines.length ? lines.join("\n") : undefined;
+}
+
+/** Fields never written to server logs — identity numbers, other people's details, secrets. */
+const LOG_REDACTED_KEYS = new Set([
+  "turnstileToken",
+  "nationalId",
+  "dateOfBirth",
+  "beneficiary",
+  "dependents",
+  "deceasedName",
+  "deceasedAge",
+  "deceasedSex",
+]);
+
+/**
+ * What the fallback log keeps: enough to call the person back and understand the
+ * request, with sensitive fields replaced by "[redacted]".
+ */
+export function redactForLog(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactForLog);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, LOG_REDACTED_KEYS.has(k) ? "[redacted]" : redactForLog(v)]),
+  );
+}
+
+export async function createLead(
+  input: LeadInput,
+  opts?: {
+    /**
+     * The visitor's Turnstile token was already sent to POL263 by an earlier call in
+     * this request. Tokens are single-use, so a second POL263 call would be rejected
+     * as a failed verification — go straight to local capture instead.
+     */
+    turnstileSpent?: boolean;
+  },
+): Promise<Result<{ leadId: string | null }>> {
   // NOT-YET-AVAILABLE: an org-scoped, ref-optional public lead endpoint. The
   // existing lead capture (`/api/public/agent-vcard/:refCode/quote-lead`) requires
   // an agent ref. Proposed: POST /api/public/leads { orgId, ... }.
-  if (REF) {
+  if (REF && !opts?.turnstileSpent) {
     const r = await call<{ leadId: string }>(
       `/api/public/agent-vcard/${encodeURIComponent(REF)}/quote-lead`,
       {
@@ -315,6 +380,9 @@ export async function createLead(input: LeadInput): Promise<Result<{ leadId: str
           phone: input.phone,
           email: input.email,
           productInterest: input.productInterest,
+          source: input.source,
+          countryOfResidence: input.countryOfResidence,
+          message: leadNote(input),
           org: ORG_ID,
           turnstileToken: input.turnstileToken,
         }),
@@ -335,11 +403,9 @@ export async function createLead(input: LeadInput): Promise<Result<{ leadId: str
   }
 
   // Fallback: persist for the DFS team. In this Phase-1 build that means a
-  // structured server log; wire to email/DB when the endpoint lands.
-  console.warn("[pol263] lead captured via fallback — no POL263 endpoint reached:", {
-    ...input,
-    context: input.context,
-  });
+  // structured server log (sensitive fields redacted); wire to email/DB when the
+  // endpoint lands.
+  console.warn("[pol263] lead captured via fallback — no POL263 endpoint reached:", redactForLog(input));
   return { ok: true, source: "fallback", data: { leadId: null } };
 }
 
@@ -384,7 +450,7 @@ export async function getRegistrationOptions(): Promise<Resolved<RegistrationOpt
     branches: RegistrationOptions["branches"];
     nationalIdFormat?: string;
     addOns?: RegistrationOptionsAddOn[];
-  }>(`/api/public/registration-options?ref=${encodeURIComponent(REF)}`);
+  }>(`/api/public/registration-options?ref=${encodeURIComponent(REF)}`, { revalidate: READ_REVALIDATE_SECONDS });
   if (!r.ok) return { data: fallback, source: "fallback" };
   return {
     source: "pol263",
@@ -449,6 +515,7 @@ export async function registerPolicy(
   // POL263's POST /api/public/register-policy is ref-scoped today. When a real
   // productVersionId and REF are available we submit the real application; the
   // add-on services / diaspora context ride along as a lead so nothing is lost.
+  const attemptedRegistration = Boolean(BASE && REF && input.productVersionId);
   if (REF && input.productVersionId) {
     const r = await call<{
       policyNumber: string;
@@ -491,21 +558,17 @@ export async function registerPolicy(
       };
     }
     if (r.ok) {
-      // Best-effort: attach the personalisation context as a lead note.
-      await createLead({
-        firstName: input.firstName,
-        lastName: input.lastName,
-        phone: input.phone,
-        email: input.email,
-        source: "protect_my_family",
-        productInterest: input.packageSlug,
-        countryOfResidence: input.countryOfResidence,
-        context: {
+      // register-policy has no field for the personalisation choices, and the visitor's
+      // Turnstile token is spent, so a follow-up POL263 lead would be rejected. Record
+      // them against the policy number for the DFS team instead.
+      if (input.selectedServices?.length || input.serviceProvince || input.countryOfResidence) {
+        console.info("[pol263] registration personalisation (not stored in POL263):", {
           policyNumber: r.data.policyNumber,
           selectedServices: input.selectedServices,
           serviceProvince: input.serviceProvince,
-        },
-      }).catch(() => {});
+          countryOfResidence: input.countryOfResidence,
+        });
+      }
       return {
         ok: true,
         source: "pol263",
@@ -523,7 +586,9 @@ export async function registerPolicy(
 
   // Fallback — capture the full application as a lead so a Funeral Care
   // Consultant can complete it. The customer still gets a clean confirmation.
-  const lead = await createLead({
+  // If register-policy was attempted, it already used the Turnstile token.
+  const lead = await createLead(
+    {
     firstName: input.firstName,
     lastName: input.lastName,
     phone: input.phone,
@@ -542,7 +607,9 @@ export async function registerPolicy(
       serviceProvince: input.serviceProvince,
       paymentSchedule: input.paymentSchedule,
     },
-  });
+    },
+    { turnstileSpent: attemptedRegistration },
+  );
   // Same rule as above: a real rejection from POL263 must reach the visitor,
   // not be reported back as a successful "captured" confirmation.
   if (!lead.ok) return lead;
@@ -601,6 +668,20 @@ export async function createFuneralRequest(input: FuneralRequestInput): Promise<
   const firstName = input.contactName.split(" ")[0] || input.contactName;
   const lastName = input.contactName.split(" ").slice(1).join(" ") || "(not given)";
 
+  // Everything the form collects that funeral-request has no dedicated field for.
+  const details = leadNote({
+    message: input.notes,
+    context: {
+      Relationship: input.relationshipToDeceased,
+      "Existing policyholder": input.isExistingPolicyholder,
+      "Policy number": input.policyNumber,
+      "Service province": input.serviceProvince,
+      "Service town/area": input.serviceTownOrArea,
+      "Needed by": input.neededBy,
+      "Caller location": input.callerLocation,
+    },
+  });
+
   if (REF) {
     const r = await call<{ reference: string; leadId: string; quotation: FuneralQuotation }>(
       `/api/public/funeral-request`,
@@ -616,10 +697,7 @@ export async function createFuneralRequest(input: FuneralRequestInput): Promise<
           deceasedName: input.deceasedName,
           deceasedAge: input.deceasedAge,
           deceasedSex: input.deceasedSex,
-          message:
-            [input.relationshipToDeceased && `Relationship: ${input.relationshipToDeceased}`, input.notes]
-              .filter(Boolean)
-              .join(" — ") || undefined,
+          message: details,
           requestedAddOnIds: input.requestedAddOnIds ?? [],
           turnstileToken: input.turnstileToken,
         }),
@@ -643,16 +721,26 @@ export async function createFuneralRequest(input: FuneralRequestInput): Promise<
   // Fallback: POL263 unreachable/misconfigured — capture as a lead so a Funeral Care
   // Consultant can follow up; the cash-service selection rides along as context since
   // there's no quotation engine to price it locally.
-  const lead = await createLead({
-    firstName,
-    lastName,
-    phone: input.contactPhone,
-    email: input.contactEmail,
-    source: "arrange_a_funeral",
-    message: input.notes,
-    context: { priority: "urgent", ...input },
-    turnstileToken: input.turnstileToken,
-  });
+  // If funeral-request was attempted, it already used the Turnstile token.
+  const lead = await createLead(
+    {
+      firstName,
+      lastName,
+      phone: input.contactPhone,
+      email: input.contactEmail,
+      source: "arrange_a_funeral",
+      message: details,
+      context: {
+        priority: "urgent",
+        deceasedName: input.deceasedName,
+        deceasedAge: input.deceasedAge,
+        deceasedSex: input.deceasedSex,
+        requestedAddOnIds: input.requestedAddOnIds,
+      },
+      turnstileToken: input.turnstileToken,
+    },
+    { turnstileSpent: Boolean(BASE && REF) },
+  );
   if (!lead.ok) return lead;
   return { ok: true, source: lead.source, data: { reference: lead.data?.leadId ?? "pending", quotation: null } };
 }

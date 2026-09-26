@@ -29,9 +29,9 @@ export type TurnstileHandle = {
 };
 
 /**
- * Cloudflare Turnstile widget. Only used immediately before the two write
- * actions that create real records (lead capture, policy registration) — never
- * on the quote-estimate step, which doesn't persist anything.
+ * Cloudflare Turnstile widget. Only used immediately before write actions that
+ * create real records (leads, funeral requests, policy registration, portal
+ * sign-in) — never on the quote-estimate step, which doesn't persist anything.
  */
 export const Turnstile = forwardRef<TurnstileHandle, { onToken: (token: string | null) => void; className?: string }>(
   function Turnstile({ onToken, className }, ref) {

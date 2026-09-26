@@ -25,7 +25,10 @@ function PaymentsBody() {
   const params = useSearchParams();
   const [policies, setPolicies] = useState<Policy[] | null>(null);
   const [selected, setSelected] = useState<string>("");
-  const [payments, setPayments] = useState<Payment[] | null>(null);
+  // Payments are tagged with the policy they belong to, so switching policy shows
+  // the loader until that policy's list arrives.
+  const [loaded, setLoaded] = useState<{ policyId: string; items: Payment[] } | null>(null);
+  const payments = loaded && loaded.policyId === selected ? loaded.items : null;
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -40,10 +43,15 @@ function PaymentsBody() {
 
   useEffect(() => {
     if (!selected) return;
-    setPayments(null);
-    portalGet<Payment[]>(`policies/${selected}/payments`)
-      .then(setPayments)
-      .catch(() => setPayments([]));
+    let cancelled = false;
+    portalGet<Payment[]>(`policies/${encodeURIComponent(selected)}/payments`)
+      .catch(() => [] as Payment[])
+      .then((items) => {
+        if (!cancelled) setLoaded({ policyId: selected, items });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [selected]);
 
   if (error) return <p className="text-sm text-terracotta">{error}</p>;
@@ -74,7 +82,9 @@ function PaymentsBody() {
             amount={due}
             currency={policy.currency}
             onPaid={() =>
-              portalGet<Payment[]>(`policies/${policy.id}/payments`).then(setPayments).catch(() => {})
+              portalGet<Payment[]>(`policies/${encodeURIComponent(policy.id)}/payments`)
+                .then((items) => setLoaded({ policyId: policy.id, items }))
+                .catch(() => {})
             }
           />
         )}

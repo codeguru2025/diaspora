@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Field, TextInput, TextArea, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { track } from "@/lib/analytics";
 import type { LeadInput } from "@/lib/pol263";
 
@@ -28,6 +29,9 @@ export function LeadForm({
   contactKind?: "callback" | "message" | "bespoke";
 }) {
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
+  const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,18 +47,24 @@ export function LeadForm({
       context: Object.fromEntries(
         extraFields.map((f) => [f.name, String(fd.get(f.name) || "")]).filter(([, v]) => v),
       ),
+      turnstileToken,
     };
+    setError("");
     try {
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "");
       if (contactKind) track({ name: "contact_request", kind: contactKind });
       setStatus("done");
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "");
       setStatus("error");
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     }
   }
 
@@ -122,9 +132,11 @@ export function LeadForm({
         )}
       </div>
 
+      <Turnstile ref={turnstileRef} onToken={setTurnstileToken} className="mt-5" />
+
       {status === "error" && (
         <p className="mt-4 text-sm text-terracotta">
-          Something went wrong sending your request. Please try again, or call us directly.
+          {error || "Something went wrong sending your request. Please try again, or call us directly."}
         </p>
       )}
 
@@ -137,7 +149,11 @@ export function LeadForm({
         .
       </p>
 
-      <Button type="submit" className="mt-4 w-full sm:w-auto" disabled={status === "submitting"}>
+      <Button
+        type="submit"
+        className="mt-4 w-full sm:w-auto"
+        disabled={!turnstileToken || status === "submitting"}
+      >
         {status === "submitting" ? "Sending…" : submitLabel}
       </Button>
     </form>

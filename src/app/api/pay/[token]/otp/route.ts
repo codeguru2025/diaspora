@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { submitPaymentLinkOtp } from "@/lib/pol263";
+import { otpSchema, parseBody, paymentTokenSchema } from "@/lib/api-schemas";
+import { LIMITS, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request, ctx: { params: Promise<{ token: string }> }) {
+  const limited = rateLimit(req, LIMITS.pay);
+  if (limited) return limited;
+
   const { token } = await ctx.params;
-  let body: { otp?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (!paymentTokenSchema.safeParse(token).success) {
+    return NextResponse.json({ error: "This payment link wasn't found." }, { status: 404 });
   }
+  const body = await parseBody(req, otpSchema);
+  if (!body.ok) return body.response;
 
-  const otp = String(body.otp || "").trim();
-  if (!otp) {
-    return NextResponse.json({ error: "Enter the code you received." }, { status: 400 });
-  }
-
-  const result = await submitPaymentLinkOtp(token, otp);
+  const result = await submitPaymentLinkOtp(token, body.data.otp);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

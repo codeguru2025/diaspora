@@ -1,43 +1,26 @@
 import { proxyClientAuth } from "@/lib/portal";
+import { AUTH_PATHS, allowed } from "@/lib/portal-paths";
+import { LIMITS, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Transparent proxy: /api/portal/<x> → POL263 /api/client-auth/<x>
- * Only a safe allow-list of client-auth paths is forwarded.
+ * Only a safe allow-list of client-auth paths is forwarded (src/lib/portal-paths.ts).
  */
 
-const ALLOW = [
-  /^login$/,
-  /^logout$/,
-  /^me$/,
-  /^tenant$/,
-  /^claim$/,
-  /^enroll$/,
-  /^reset-password$/,
-  /^change-password$/,
-  /^policies$/,
-  /^policies\/[^/]+\/(payments|members|document|beneficiary)$/,
-  /^claims$/,
-  /^notifications$/,
-  /^notifications\/unread-count$/,
-  /^notifications\/[^/]+\/read$/,
-  /^receipts$/,
-  /^receipts\/[^/]+\/download$/,
-  /^payment-intents$/,
-  /^payment-intents\/[^/]+\/(initiate|otp|status)$/,
-  /^feedback$/,
-  /^dependent-request$/,
-];
-
-function allowed(path: string) {
-  return ALLOW.some((re) => re.test(path));
-}
-
 async function handle(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
-  const { path: parts } = await ctx.params;
-  const path = (parts ?? []).join("/");
-  if (!allowed(path)) {
+  const { path: parts = [] } = await ctx.params;
+  if (!allowed(parts)) {
     return Response.json({ message: "Not found" }, { status: 404 });
   }
+
+  const limited =
+    rateLimit(req, LIMITS.portal) ??
+    (req.method !== "GET" && AUTH_PATHS.has(parts[0]) ? rateLimit(req, LIMITS.portalAuth) : null);
+  if (limited) return limited;
+
+  // Segments arrive decoded; re-encode each so a "?" or "#" inside an id can't
+  // change the upstream URL's query or fragment.
+  const path = parts.map(encodeURIComponent).join("/");
   const query = new URL(req.url).search.replace(/^\?/, "");
   return proxyClientAuth(path, req, { query });
 }
