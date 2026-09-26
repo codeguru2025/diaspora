@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Field, TextInput, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { portalPost, PortalError } from "@/lib/portal-client";
 
 type SecurityQuestion = { id: string; question: string };
@@ -20,21 +21,33 @@ function EnrollBody() {
   const [clientId, setClientId] = useState("");
   const [firstName, setFirstName] = useState("");
   const [questions, setQuestions] = useState<SecurityQuestion[]>([]);
+  // POL263's /enroll re-verifies these (nothing else binds it to the /claim step), so they're
+  // kept from step 0 and sent again.
+  const [policyNumber, setPolicyNumber] = useState("");
+  const [activationCode, setActivationCode] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   async function verify(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
     setError("");
     const fd = new FormData(e.currentTarget);
+    // POL263 stores both uppercase, and /claim matches the activation code exactly.
+    const policy = String(fd.get("policyNumber") ?? "").trim().toUpperCase();
+    const code = String(fd.get("activationCode") ?? "").trim().toUpperCase();
     try {
       const data = await portalPost<{
         clientId: string;
         firstName: string;
         securityQuestions: SecurityQuestion[];
       }>("claim", {
-        policyNumber: fd.get("policyNumber"),
-        activationCode: fd.get("activationCode"),
+        policyNumber: policy,
+        activationCode: code,
+        turnstileToken,
       });
+      setPolicyNumber(policy);
+      setActivationCode(code);
       setClientId(data.clientId);
       setFirstName(data.firstName);
       setQuestions(data.securityQuestions ?? []);
@@ -43,8 +56,14 @@ function EnrollBody() {
       setError(
         err instanceof PortalError && err.kind === "unconfigured"
           ? "Account activation isn't connected yet. Your consultant can activate your account for you."
-          : "That activation code or policy number didn't match. Please check and try again.",
+          : err instanceof PortalError && /invalid activation code/i.test(err.message)
+            ? "That activation code or policy number didn't match. Enter both exactly as shown in your confirmation, including any letters before the number."
+            : err instanceof Error
+              ? err.message
+              : "Something went wrong. Please try again.",
       );
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } finally {
       setBusy(false);
     }
@@ -62,6 +81,8 @@ function EnrollBody() {
     try {
       await portalPost("enroll", {
         clientId,
+        policyNumber,
+        activationCode,
         password: fd.get("password"),
         securityQuestionId: fd.get("securityQuestionId"),
         securityAnswer: fd.get("securityAnswer"),
@@ -106,8 +127,9 @@ function EnrollBody() {
               <TextInput name="activationCode" required defaultValue={params.get("code") ?? ""} />
             </Field>
           </div>
+          <Turnstile ref={turnstileRef} onToken={setTurnstileToken} className="mt-5" />
           {error && <p className="mt-3 text-sm text-terracotta">{error}</p>}
-          <Button type="submit" className="mt-5 w-full" disabled={busy}>
+          <Button type="submit" className="mt-5 w-full" disabled={busy || !turnstileToken}>
             {busy ? "Checking…" : "Continue"}
           </Button>
         </form>

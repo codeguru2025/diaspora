@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Field, TextInput } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { portalPost, PortalError } from "@/lib/portal-client";
 
 export function PortalLogin({ onSuccess }: { onSuccess: () => void }) {
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,12 +20,15 @@ export function PortalLogin({ onSuccess }: { onSuccess: () => void }) {
     const fd = new FormData(e.currentTarget);
     try {
       await portalPost("login", {
-        policyNumber: fd.get("policyNumber"),
+        policyNumber: String(fd.get("policyNumber") ?? "").trim().toUpperCase(),
         password: fd.get("password"),
+        turnstileToken,
       });
       onSuccess();
     } catch (e) {
       setStatus("error");
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       setMessage(
         e instanceof PortalError && e.message !== "Request failed"
           ? e.message
@@ -45,8 +51,9 @@ export function PortalLogin({ onSuccess }: { onSuccess: () => void }) {
         <Field label="Password" required>
           <TextInput name="password" type="password" required autoComplete="current-password" />
         </Field>
+        <Turnstile ref={turnstileRef} onToken={setTurnstileToken} />
         {status === "error" && <p className="text-sm text-terracotta">{message}</p>}
-        <Button type="submit" className="w-full" disabled={status === "submitting"}>
+        <Button type="submit" className="w-full" disabled={status === "submitting" || !turnstileToken}>
           {status === "submitting" ? "Signing in…" : "Sign in"}
         </Button>
       </form>
