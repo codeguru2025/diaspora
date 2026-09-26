@@ -60,7 +60,7 @@ export default function HowItWorksPage() {
         <SectionHeading eyebrow="At a glance" title="Package → Family → Personalise → Review → Payment" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {howItWorks.map((s, i) => (
-            <div key={s.title} className="rounded-2xl border border-line bg-surface p-5">
+            <div key={s.title} className="dfs-card rounded-[4px] p-5">
               <span className="text-xs font-semibold text-champagne-deep">Step {i + 1}</span>
               <h3 className="mt-1 text-lg">{s.title}</h3>
               <p className="mt-1 text-sm text-stone">{s.body}</p>

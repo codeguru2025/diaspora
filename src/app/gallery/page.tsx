@@ -31,7 +31,7 @@ export default function GalleryPage() {
             cat === "Caskets" ? (
               <figure
                 key={cat}
-                className="overflow-hidden rounded-2xl border border-line bg-surface sm:col-span-2"
+                className="overflow-hidden dfs-card rounded-[4px] sm:col-span-2"
               >
                 <CasketSlideshow />
                 <figcaption className="flex items-center justify-between gap-3 px-4 py-3 text-sm text-charcoal">
@@ -44,7 +44,7 @@ export default function GalleryPage() {
             ) : (
               <figure
                 key={cat}
-                className="overflow-hidden rounded-2xl border border-line bg-surface"
+                className="overflow-hidden dfs-card rounded-[4px]"
               >
                 {REAL_GALLERY_PHOTOS[cat] || GALLERY_PHOTOS[cat] ? (
                   <Image

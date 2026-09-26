@@ -16,7 +16,7 @@ export function BundleCard({ bundle }: { bundle: Bundle }) {
   return (
     <Link
       href={`/services#${bundle.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]"
+      className="group flex flex-col overflow-hidden dfs-card rounded-[4px] shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]"
     >
       <div className={cn("bg-gradient-to-br to-surface p-6", accent[bundle.accent])}>
         <div className="flex items-center gap-2">

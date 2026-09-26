@@ -43,14 +43,14 @@ export function Header() {
       className={cn(
         "sticky top-0 z-50 border-b transition-colors",
         scrolled || open
-          ? "border-line bg-abyss/95 backdrop-blur"
+          ? "border-line bg-abyss/85 backdrop-blur-xl"
           : "border-transparent bg-abyss",
       )}
     >
-      <Container className="flex h-16 items-center justify-between gap-4 md:h-[4.75rem]">
+      <Container className="flex h-16 max-w-[88rem] items-center justify-between gap-6 md:h-20">
         <Logo tone="light" />
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Primary">
           {mainNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
@@ -58,8 +58,8 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-full px-3 py-2 text-[0.9rem] font-medium transition-colors",
-                  active ? "text-ink" : "text-stone hover:text-ink",
+                  "relative whitespace-nowrap px-3 py-2 text-[0.84rem] tracking-wide transition-colors after:absolute after:inset-x-3 after:-bottom-0.5 after:h-px after:origin-left after:bg-champagne after:transition-transform after:duration-300",
+                  active ? "text-ink after:scale-x-100" : "text-stone after:scale-x-0 hover:text-ink hover:after:scale-x-100",
                 )}
               >
                 {item.label}
@@ -68,15 +68,15 @@ export function Header() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          <Button
+        <div className="hidden items-center gap-5 xl:flex">
+          <Link
             href={cta.arrange.href}
-            variant="ghost"
-            size="sm"
+            className="inline-flex items-center gap-2 whitespace-nowrap text-[0.84rem] text-stone transition-colors hover:text-ink"
             onClick={() => track({ name: "cta_click", cta: "arrange", location: "header" })}
           >
+            <span aria-hidden className="size-1.5 rounded-full bg-terracotta" />
             {cta.arrange.label}
-          </Button>
+          </Link>
           <Button
             href={cta.protect.href}
             variant="primary"
@@ -89,7 +89,7 @@ export function Header() {
 
         <button
           type="button"
-          className="grid size-10 place-items-center rounded-full text-ink lg:hidden"
+          className="grid size-10 place-items-center rounded-full text-ink xl:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -101,14 +101,14 @@ export function Header() {
       {/* Mobile panel */}
       <div
         hidden={!open}
-        className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-abyss"
+        className="xl:hidden fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-abyss md:top-20"
       >
         <Container className="flex flex-col gap-1 py-6">
           {mainNav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-xl px-3 py-3.5 text-lg font-medium text-ink hover:bg-cream"
+              className="border-b border-line px-1 py-4 font-[family-name:var(--font-display)] text-2xl text-ink hover:text-champagne"
             >
               {item.label}
               {item.description && (

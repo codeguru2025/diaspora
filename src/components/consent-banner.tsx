@@ -19,7 +19,7 @@ export function ConsentBanner() {
       aria-label="Cookie preferences"
       className="fixed inset-x-0 bottom-16 z-50 px-3 lg:bottom-4"
     >
-      <div className="mx-auto max-w-2xl rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-raised)]">
+      <div className="mx-auto max-w-2xl dfs-card rounded-[4px] p-4 shadow-[var(--shadow-raised)]">
         <p className="text-sm text-charcoal">
           We&rsquo;d like to use privacy-friendly analytics to understand how this site is used and
           improve it. Essential features work either way.{" "}

@@ -22,7 +22,7 @@ export function CtaBand({
   return (
     <Section tone="ink">
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-3xl md:text-[2.5rem]">{title}</h2>
+        <h2 className="text-[2.1rem] leading-[1.08] md:text-5xl">{title}</h2>
         <p className="mt-4 text-lg text-ivory/75">{body}</p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button href={primary.href} variant="accent" size="lg">
@@ -41,7 +41,7 @@ export function CtaBand({
 export function FuneralNowBand() {
   return (
     <Section tone="cream">
-      <div className="overflow-hidden rounded-3xl border border-terracotta/25 bg-surface">
+      <div className="dfs-card overflow-hidden rounded-[4px] border-terracotta/30">
         <div className="grid gap-6 p-8 md:grid-cols-[1.5fr_1fr] md:items-center md:p-12">
           <div>
             <Badge tone="terracotta">Immediate assistance</Badge>
@@ -58,14 +58,14 @@ export function FuneralNowBand() {
             </Button>
             <a
               href={site.contact.atNeedPhoneHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-ink/20 px-5 py-3 text-sm font-medium text-ink hover:bg-ink/5"
+              className="inline-flex items-center justify-center gap-2 rounded-[3px] border border-ivory/20 px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ivory/45 hover:bg-ivory/5"
             >
               <Phone className="size-4" />
               Call our care line · {site.contact.atNeedPhoneDisplay}
             </a>
             <a
               href={site.contact.whatsappHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-ink/20 px-5 py-3 text-sm font-medium text-ink hover:bg-ink/5"
+              className="inline-flex items-center justify-center gap-2 rounded-[3px] border border-ivory/20 px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ivory/45 hover:bg-ivory/5"
             >
               <MessageCircle className="size-4" />
               Message us on WhatsApp
@@ -88,8 +88,8 @@ export function Steps({ tone = "ivory" }: { tone?: "ivory" | "cream" | "sand" | 
       />
       <ol className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {howItWorks.map((s, i) => (
-          <li key={s.title} className="rounded-2xl border border-line bg-surface p-6">
-            <span className="font-[family-name:var(--font-display)] text-3xl text-champagne-deep">
+          <li key={s.title} className="dfs-card rounded-[4px] p-6">
+            <span className="font-[family-name:var(--font-display)] text-4xl italic text-champagne">
               {String(i + 1).padStart(2, "0")}
             </span>
             <h3 className="mt-3 text-lg">{s.title}</h3>
@@ -111,10 +111,10 @@ export function DifferenceSection() {
           title="More than funeral cover. Complete funeral fulfilment."
           intro="From the essentials to the details that make a farewell uniquely personal, Diaspora Funeral Services helps families create the funeral they want — with professional support from start to finish."
         />
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-x-10 sm:grid-cols-2">
           {dfsDifference.map((d) => (
-            <li key={d} className="flex items-start gap-2.5 rounded-xl bg-cream px-4 py-3 text-sm text-charcoal">
-              <Check className="mt-0.5 size-4 shrink-0 text-sage" />
+            <li key={d} className="flex items-start gap-3 border-b border-line py-4 text-[0.95rem] text-charcoal">
+              <Check className="mt-1 size-4 shrink-0 text-champagne" />
               {d}
             </li>
           ))}
@@ -146,7 +146,7 @@ export function NameItShowcase() {
         ))}
         <Link
           href="/services"
-          className="rounded-full bg-champagne px-4 py-2 text-sm font-medium text-void hover:bg-champagne-deep hover:text-ivory"
+          className="rounded-full border border-champagne/60 px-4 py-2 text-sm font-medium text-champagne transition-colors hover:bg-champagne hover:text-void"
         >
           Explore everything we offer →
         </Link>
@@ -177,7 +177,7 @@ export function DiasporaSection() {
         </div>
         <ul className="grid gap-3 sm:grid-cols-2">
           {diasporaPoints.map((p) => (
-            <li key={p.title} className="rounded-xl border border-line bg-surface p-4">
+            <li key={p.title} className="dfs-card rounded-[4px] p-4">
               <p className="text-sm font-semibold text-ink">{p.title}</p>
               <p className="mt-1 text-xs leading-relaxed text-stone">{p.body}</p>
             </li>
@@ -197,7 +197,7 @@ export function TrustStrip() {
       <SectionHeading eyebrow="Why families trust us" title="Professional. Transparent. Accountable." />
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((m) => (
-          <div key={m.label} className="rounded-xl border border-line bg-surface p-5">
+          <div key={m.label} className="dfs-card rounded-[4px] p-5">
             <p className="text-sm font-semibold text-ink">{m.label}</p>
             <p className="mt-1 text-sm text-stone">{m.detail}</p>
           </div>
@@ -237,8 +237,8 @@ export function ConciergeSection() {
         />
         <ul className="grid gap-3 sm:grid-cols-2">
           {tiers.map((t) => (
-            <li key={t.name} className="rounded-xl border border-line bg-cream p-4">
-              <p className="text-sm font-semibold text-ink">{t.name}</p>
+            <li key={t.name} className="dfs-card rounded-[4px] p-5">
+              <p className="font-[family-name:var(--font-display)] text-xl text-ink">{t.name}</p>
               <p className="mt-1 text-xs text-stone">{t.line}</p>
             </li>
           ))}

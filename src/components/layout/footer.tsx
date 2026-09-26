@@ -19,7 +19,8 @@ export function Footer() {
     .filter((s) => s.href !== CONFIGURE);
 
   return (
-    <footer className="bg-abyss text-ivory/70">
+    <footer className="relative bg-abyss text-ivory/70">
+      <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-champagne/50 to-transparent" />
       <Container className="py-16">
         <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
           <div>

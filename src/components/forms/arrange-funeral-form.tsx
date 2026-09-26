@@ -57,7 +57,7 @@ export function ArrangeFuneralForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+    <form onSubmit={onSubmit} className="dfs-card rounded-[4px] p-6 sm:p-8">
       <p className="rounded-xl bg-cream px-4 py-3 text-sm text-charcoal">
         You only need to give us your name and a phone number. We&rsquo;ll call you and take it from
         there. Everything else below is optional and just helps us prepare.

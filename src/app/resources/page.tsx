@@ -44,7 +44,7 @@ export default function ResourcesPage() {
                   <Link
                     key={r.slug}
                     href={`/resources/${r.slug}`}
-                    className="group flex flex-col rounded-2xl border border-line bg-surface p-5 hover:border-ink/25"
+                    className="group flex flex-col dfs-card rounded-[4px] p-5 hover:border-ink/25"
                   >
                     <Badge tone="outline">{r.readingTime} read</Badge>
                     <h3 className="mt-3 text-lg leading-snug group-hover:text-champagne-deep">

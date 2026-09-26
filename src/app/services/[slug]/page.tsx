@@ -145,7 +145,7 @@ export default async function ServiceDetailPage({
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-2xl border border-line bg-surface p-6">
+            <div className="dfs-card rounded-[4px] p-6">
               {SERVICE_PHOTOS[s.slug] ? (
                 <Image
                   src={SERVICE_PHOTOS[s.slug].src}

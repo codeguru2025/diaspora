@@ -44,7 +44,7 @@ export function PortalLogin({ onSuccess }: { onSuccess: () => void }) {
         Use your policy number and the password you set when you activated your account.
       </p>
 
-      <form onSubmit={onSubmit} className="mt-6 space-y-4 rounded-2xl border border-line bg-surface p-6">
+      <form onSubmit={onSubmit} className="mt-6 space-y-4 dfs-card rounded-[4px] p-6">
         <Field label="Policy number" required>
           <TextInput name="policyNumber" required autoComplete="username" placeholder="e.g. DFS-00042" />
         </Field>

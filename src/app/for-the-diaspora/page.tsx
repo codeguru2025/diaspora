@@ -41,7 +41,7 @@ export default function DiasporaPage() {
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {diasporaPoints.map((p) => (
-            <div key={p.title} className="rounded-2xl border border-line bg-surface p-5">
+            <div key={p.title} className="dfs-card rounded-[4px] p-5">
               <p className="font-semibold text-ink">{p.title}</p>
               <p className="mt-1 text-sm text-stone">{p.body}</p>
             </div>

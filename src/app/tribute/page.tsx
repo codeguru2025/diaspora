@@ -40,7 +40,7 @@ export default function TributeLandingPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-8 rounded-2xl border border-line bg-surface p-6">
+            <div className="mt-8 dfs-card rounded-[4px] p-6">
               <p className="text-sm text-stone">
                 See the format before requesting one — this is a fictional example, not a real
                 memorial.

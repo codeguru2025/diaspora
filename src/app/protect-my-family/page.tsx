@@ -52,7 +52,7 @@ export default async function ProtectMyFamilyPage({
       <Steps tone="cream" />
 
       <Section tone="ivory">
-        <div className="rounded-2xl border border-line bg-surface p-8">
+        <div className="dfs-card rounded-[4px] p-8">
           <SectionHeading
             eyebrow="Joining online"
             title="What happens when you join"

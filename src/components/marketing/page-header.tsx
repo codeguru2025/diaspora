@@ -24,16 +24,9 @@ export function PageHeader({
   const copy = (
     <div>
       {eyebrow && (
-        <p
-          className={cn(
-            "mb-3 text-xs font-semibold uppercase tracking-[0.18em]",
-            tone === "ink" ? "text-champagne" : "text-champagne-deep",
-          )}
-        >
-          {eyebrow}
-        </p>
+        <p className="dfs-eyebrow mb-5">{eyebrow}</p>
       )}
-      <h1 className={cn("text-[2.25rem] leading-[1.08] md:text-5xl", !visual && "max-w-3xl")}>
+      <h1 className={cn("text-[2.4rem] leading-[1.05] md:text-6xl", !visual && "max-w-3xl")}>
         {title}
       </h1>
       {intro && (
@@ -51,8 +44,13 @@ export function PageHeader({
     </div>
   );
   return (
-    <section className={cn("border-b border-line", tones[tone])}>
-      <Container className="py-14 md:py-20">
+    <section className={cn("relative overflow-hidden border-b border-line", tones[tone])}>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(50rem 28rem at 85% -20%, rgba(207,174,109,0.10), transparent 65%)" }}
+      />
+      <Container className="relative py-16 md:py-24">
         {visual ? (
           <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-center">
             {copy}

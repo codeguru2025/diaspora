@@ -12,7 +12,7 @@ export function Badge({
 }) {
   const tones = {
     neutral: "bg-ink/8 text-charcoal",
-    accent: "bg-champagne/25 text-champagne-deep",
+    accent: "border border-champagne/40 bg-champagne/10 text-champagne",
     sage: "bg-sage/18 text-sage",
     clay: "bg-clay/15 text-clay",
     terracotta: "bg-terracotta/12 text-terracotta",
@@ -44,7 +44,7 @@ export function Card({
   return (
     <Tag
       className={cn(
-        "rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-soft)]",
+        "dfs-card rounded-[4px] p-6",
         className,
       )}
     >

@@ -35,7 +35,7 @@ export default function DigitalServicesPage() {
             <ServiceCard key={s!.slug} service={s!} />
           ))}
         </div>
-        <div className="mt-8 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface p-5">
+        <div className="mt-8 flex flex-wrap items-center gap-4 dfs-card rounded-[4px] p-5">
           <p className="flex-1 text-sm text-stone">
             A Tribute Page is a shareable link with the announcement, service details and a
             tribute wall for messages from family and friends.

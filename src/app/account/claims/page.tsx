@@ -89,7 +89,7 @@ function ClaimsBody() {
       )}
 
       {formOpen && !done && (
-        <form onSubmit={submit} className="rounded-2xl border border-line bg-surface p-6">
+        <form onSubmit={submit} className="dfs-card rounded-[4px] p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Which policy?" required className="sm:col-span-2">
               <Select name="policyId" required defaultValue="">

@@ -108,7 +108,7 @@ export function CashQuoteForm({ services }: { services: ResolvedService[] }) {
           A member of our care team will follow up to confirm details.
         </p>
         {items.length > 0 && (
-          <div className="mt-5 divide-y divide-line rounded-xl border border-line bg-surface">
+          <div className="mt-5 divide-y divide-line dfs-card rounded-[4px]">
             {items.map((it) => (
               <div key={it.addOnId} className="flex items-center justify-between px-4 py-2.5 text-sm">
                 <span className="text-charcoal">{it.name}</span>
@@ -135,7 +135,7 @@ export function CashQuoteForm({ services }: { services: ResolvedService[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+    <form onSubmit={onSubmit} className="dfs-card rounded-[4px] p-6 sm:p-8">
       <p className="rounded-xl bg-cream px-4 py-3 text-sm text-charcoal">
         Tick the services you want priced. The total updates as you go — nothing is booked until you
         send it to us.

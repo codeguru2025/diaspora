@@ -5,21 +5,24 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "accent" | "urgen
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-tight transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none text-center";
+  "inline-flex items-center justify-center gap-2 rounded-[3px] font-semibold uppercase tracking-[0.14em] sm:whitespace-nowrap transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none text-center";
 
+// Gold is a signal, not a wash: one solid-gold primary per view; everything else is outlined.
 const variants: Record<Variant, string> = {
-  primary: "bg-champagne text-void font-semibold hover:bg-champagne-deep",
-  secondary: "bg-cream text-ink border border-line-strong hover:bg-sand",
-  outline: "border border-ink/25 text-ink hover:bg-ink/5",
-  ghost: "text-ink hover:bg-ink/5",
-  accent: "bg-champagne text-void hover:bg-champagne-deep hover:text-ivory",
-  urgent: "bg-terracotta text-ivory hover:bg-[#a4573c]",
+  primary:
+    "bg-gradient-to-b from-[#dcc084] to-champagne text-void shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(207,174,109,0.6)] hover:from-[#e6cd96] hover:to-[#d8b877]",
+  secondary: "border border-champagne/45 text-champagne hover:border-champagne hover:bg-champagne/8",
+  outline: "border border-ivory/20 text-ink hover:border-ivory/45 hover:bg-ivory/5",
+  ghost: "text-ink hover:text-champagne",
+  accent:
+    "bg-gradient-to-b from-[#dcc084] to-champagne text-void hover:from-[#e6cd96] hover:to-[#d8b877]",
+  urgent: "bg-[#a9583c] text-ivory hover:bg-[#b96446]",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "text-sm px-4 py-2",
-  md: "text-[0.95rem] px-5 py-2.5",
-  lg: "text-base px-7 py-3.5",
+  sm: "text-[0.7rem] px-4 py-2.5",
+  md: "text-[0.74rem] px-6 py-3",
+  lg: "text-[0.78rem] px-8 py-4",
 };
 
 type CommonProps = {

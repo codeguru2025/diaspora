@@ -158,7 +158,7 @@ export function PayNowPanel({
   }
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-5">
+    <div className="dfs-card rounded-[4px] p-5">
       <p className="text-sm text-stone">Amount due</p>
       <p className="text-2xl font-semibold text-ink">{formatPrice(amount, currency)}</p>
 

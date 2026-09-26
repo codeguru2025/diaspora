@@ -107,7 +107,7 @@ function EnrollBody() {
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+    <div className="dfs-card rounded-[4px] p-6 sm:p-8">
       {step === 0 && (
         <form onSubmit={verify}>
           <h2 className="text-xl">Activate your account</h2>

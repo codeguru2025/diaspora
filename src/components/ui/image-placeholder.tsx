@@ -24,7 +24,7 @@ export function ImagePlaceholder({
     <div
       title={direction}
       className={cn(
-        "relative grid place-items-center overflow-hidden rounded-xl border border-line bg-surface",
+        "relative grid place-items-center overflow-hidden dfs-card rounded-[4px]",
         aspect,
         className,
       )}

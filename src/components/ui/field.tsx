@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 const inputCls =
-  "w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[0.98rem] text-charcoal placeholder:text-mist focus-visible:outline-2 focus-visible:outline-champagne-deep";
+  "w-full rounded-[3px] border border-line-strong bg-abyss/60 px-4 py-3 transition-colors hover:border-champagne/50 focus-visible:border-champagne text-[0.98rem] text-charcoal placeholder:text-mist focus-visible:outline-2 focus-visible:outline-champagne-deep";
 
 export function Field({
   label,

@@ -225,7 +225,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-5 sm:p-8">
+    <div className="dfs-card rounded-[4px] p-5 sm:p-8">
       {/* progress */}
       <ol className="mb-8 flex flex-wrap gap-x-2 gap-y-1 text-xs">
         {STEPS.slice(0, 4).map((label, i) => (

@@ -25,7 +25,7 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={cn("py-16 md:py-24", tones[tone], className)}>
+    <section id={id} className={cn("py-20 md:py-28", tones[tone], className)}>
       <Container className={containerClassName}>{children}</Container>
     </section>
   );
@@ -55,16 +55,9 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <p
-          className={cn(
-            "mb-3 text-xs font-semibold uppercase tracking-[0.18em]",
-            tone === "light" ? "text-champagne" : "text-champagne-deep",
-          )}
-        >
-          {eyebrow}
-        </p>
+        <p className="dfs-eyebrow mb-5">{eyebrow}</p>
       )}
-      <h2 className="text-3xl md:text-[2.6rem] leading-[1.1]">{title}</h2>
+      <h2 className="text-[2.1rem] leading-[1.08] md:text-5xl">{title}</h2>
       {intro && (
         <p
           className={cn(

@@ -25,7 +25,7 @@ export default async function CashQuoteViewPage({ params }: { params: Promise<{ 
       <section className="bg-void py-12 md:py-16">
         <Container className="max-w-2xl">
           {quotation.items && quotation.items.length > 0 && (
-            <div className="divide-y divide-line rounded-xl border border-line bg-surface">
+            <div className="divide-y divide-line dfs-card rounded-[4px]">
               {quotation.items.map((it, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-2.5 text-sm">
                   <span className="text-charcoal">{it.description}</span>

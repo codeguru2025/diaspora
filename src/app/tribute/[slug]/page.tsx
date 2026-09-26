@@ -49,7 +49,7 @@ export default async function TributePage({
 
           <p className="mt-6 text-lg leading-relaxed text-stone">{tribute.summary}</p>
 
-          <div className="mt-8 rounded-2xl border border-line bg-surface p-6">
+          <div className="mt-8 dfs-card rounded-[4px] p-6">
             <h2 className="text-lg">Service details</h2>
             <dl className="mt-3 divide-y divide-line">
               {tribute.service.map((row) => (
@@ -73,7 +73,7 @@ export default async function TributePage({
 
             <ul className="mt-5 space-y-3">
               {tribute.messages.map((m, i) => (
-                <li key={i} className="rounded-xl border border-line bg-surface p-4">
+                <li key={i} className="dfs-card rounded-[4px] p-4">
                   <p className="text-sm text-charcoal">{m.message}</p>
                   <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-stone">
                     {m.name} · {m.location}

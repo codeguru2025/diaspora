@@ -118,7 +118,7 @@ function Channel({
 }) {
   return (
     <li>
-      <a href={href} className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4 hover:border-ink/30">
+      <a href={href} className="flex items-start gap-3 dfs-card rounded-[4px] p-4 hover:border-ink/30">
         <Icon className="mt-0.5 size-5 text-champagne-deep" />
         <span>
           <span className="block text-xs font-semibold uppercase tracking-[0.12em] text-stone">

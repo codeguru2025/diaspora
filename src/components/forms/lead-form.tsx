@@ -71,7 +71,7 @@ export function LeadForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-line bg-surface p-6">
+    <form onSubmit={onSubmit} className="dfs-card rounded-[4px] p-6">
       <h3 className="text-xl">{title}</h3>
       {description && <p className="mt-1 text-sm text-stone">{description}</p>}
 

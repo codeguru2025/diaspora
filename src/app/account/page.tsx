@@ -41,11 +41,11 @@ export default function AccountPage() {
 
           <div>
             {status.state === "loading" ? (
-              <div className="flex min-h-40 items-center justify-center rounded-2xl border border-line bg-surface">
+              <div className="flex min-h-40 items-center justify-center dfs-card rounded-[4px]">
                 <Loader2 className="size-5 animate-spin text-stone" />
               </div>
             ) : status.state === "unconfigured" ? (
-              <div className="rounded-2xl border border-line bg-surface p-6">
+              <div className="dfs-card rounded-[4px] p-6">
                 <h2 className="text-lg">Sign-in is connecting soon</h2>
                 <p className="mt-2 text-sm text-stone">
                   Your policy is administered on the POL263 platform. Online sign-in for the DFS site
@@ -57,7 +57,7 @@ export default function AccountPage() {
                 </Button>
               </div>
             ) : status.state === "signed-in" ? (
-              <div className="flex min-h-40 items-center justify-center rounded-2xl border border-line bg-surface">
+              <div className="flex min-h-40 items-center justify-center dfs-card rounded-[4px]">
                 <Loader2 className="size-5 animate-spin text-stone" />
               </div>
             ) : (
@@ -78,7 +78,7 @@ export default function AccountPage() {
             ["Notifications", "Important updates about your policy and any funeral."],
             ["Notify us of a death", "Tell us when your family needs us — we take over from there."],
           ].map(([t, d]) => (
-            <div key={t} className="rounded-2xl border border-line bg-surface p-5">
+            <div key={t} className="dfs-card rounded-[4px] p-5">
               <ShieldCheck className="size-5 text-champagne-deep" />
               <p className="mt-2 font-semibold text-ink">{t}</p>
               <p className="mt-1 text-sm text-stone">{d}</p>

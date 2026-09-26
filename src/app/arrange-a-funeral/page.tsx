@@ -56,13 +56,13 @@ export default function ArrangeAFuneralPage() {
               { t: "2. We call you", d: "A care consultant calls, gathers what's needed, and starts arrangements." },
               { t: "3. We coordinate", d: "The service is coordinated on the ground while you stay informed." },
             ].map((s) => (
-              <div key={s.t} className="rounded-xl border border-line bg-surface p-4">
+              <div key={s.t} className="dfs-card rounded-[4px] p-4">
                 <p className="font-semibold text-ink">{s.t}</p>
                 <p className="mt-1 text-stone">{s.d}</p>
               </div>
             ))}
           </div>
-          <p className="mt-8 rounded-xl border border-line bg-surface p-4 text-sm text-stone">
+          <p className="mt-8 dfs-card rounded-[4px] p-4 text-sm text-stone">
             Not urgent, or just want a sense of cost first?{" "}
             <Link href="/quote/cash" className="font-medium text-ink underline underline-offset-2">
               Price out specific services

@@ -40,7 +40,7 @@ export default async function SavedQuotePage({
         intro="This is a saved summary. Continue when you're ready — nothing here is a commitment."
       />
       <Section tone="ivory">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-line bg-surface p-6 sm:p-8">
+        <div className="mx-auto max-w-2xl dfs-card rounded-[4px] p-6 sm:p-8">
           <dl className="space-y-3 text-sm">
             <Row label="Package" value={pkg ? pkg.name : "Not selected"} />
             {pkg && <p className="text-sm text-champagne-deep">{pkg.positioning}</p>}

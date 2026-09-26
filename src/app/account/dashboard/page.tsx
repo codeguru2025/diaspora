@@ -76,7 +76,7 @@ function DashboardBody() {
       {policies.map((p) => {
         const arrears = Number(p.arrears ?? 0);
         return (
-          <div key={p.id} className="rounded-2xl border border-line bg-surface p-5">
+          <div key={p.id} className="dfs-card rounded-[4px] p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-stone">Policy</p>

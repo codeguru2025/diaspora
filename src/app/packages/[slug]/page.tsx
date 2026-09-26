@@ -128,7 +128,7 @@ export default async function PackageDetailPage({
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-2xl border border-line bg-surface p-6">
+            <div className="dfs-card rounded-[4px] p-6">
               <Badge tone="accent">{base.concierge}</Badge>
               <h3 className="mt-3 text-lg">Ready to protect your family?</h3>
               <p className="mt-2 text-sm text-stone">

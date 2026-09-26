@@ -11,7 +11,7 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
   return (
     <Link
       href={`/services/${service.slug}`}
-      className="group flex flex-col rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-raised)]"
+      className="group dfs-card dfs-card-hover flex flex-col rounded-[4px] p-5"
     >
       {photo ? (
         <Image
@@ -19,7 +19,7 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
           alt={service.name}
           width={photo.width}
           height={photo.height}
-          className="mb-4 aspect-[4/3] w-full rounded-xl object-cover"
+          className="mb-5 aspect-[4/3] w-full rounded-[2px] object-cover opacity-90 transition-opacity duration-500 group-hover:opacity-100"
         />
       ) : (
         <ImagePlaceholder
@@ -28,8 +28,8 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
         />
       )}
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-lg leading-snug">{service.name}</h3>
-        <ArrowUpRight className="mt-1 size-4 shrink-0 text-mist transition-colors group-hover:text-ink" />
+        <h3 className="text-xl leading-snug">{service.name}</h3>
+        <ArrowUpRight className="mt-1 size-4 shrink-0 text-mist transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-champagne" />
       </div>
       <p className="mt-2 flex-1 text-sm leading-relaxed text-stone">{service.shortDescription}</p>
       <div className="mt-4 flex items-center gap-2">
