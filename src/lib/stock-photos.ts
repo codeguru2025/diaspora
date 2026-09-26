@@ -7,7 +7,7 @@
  * exists — see docs/CONTENT-CHECKLIST.md §12.
  */
 
-export const HOME_HERO_PHOTO = { src: "/images/stock/home-hero.jpg", width: 1200, height: 1800 };
+// The homepage hero now uses a real DFS service photo (HOME_HERO_PHOTO in service-photos.ts).
 
 export const RESOURCES_HERO_PHOTO = { src: "/images/stock/resources-hero.jpg", width: 1200, height: 1800 };
 

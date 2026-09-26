@@ -31,3 +31,6 @@ export const CASKET_GALLERY_PHOTOS: { src: string; width: number; height: number
   { src: "/images/caskets/custom-coffin-lace.jpg", width: 1080, height: 1080, caption: "Personalised Coffin Lace" },
   { src: "/images/caskets/custom-casket-showcase.jpg", width: 810, height: 1080, caption: "Bespoke Craftsmanship" },
 ];
+
+/** Homepage hero: DFS staff in attendance at a real DFS-conducted service. */
+export const HOME_HERO_PHOTO = { src: "/images/tribute/img4672.jpg", width: 1600, height: 996 };

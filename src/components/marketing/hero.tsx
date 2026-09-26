@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
-import { HOME_HERO_PHOTO } from "@/lib/stock-photos";
+import { HOME_HERO_PHOTO } from "@/lib/service-photos";
 import { cta } from "@/config/site";
 
 export function HomeHero() {
@@ -54,14 +54,29 @@ export function HomeHero() {
             aria-hidden
             className="absolute inset-0 translate-x-4 translate-y-4 rounded-[4px] border border-champagne/35 lg:left-6"
           />
-          <Image
-            src={HOME_HERO_PHOTO.src}
-            alt="A father embracing his daughter"
-            width={HOME_HERO_PHOTO.width}
-            height={HOME_HERO_PHOTO.height}
-            priority
-            className="relative aspect-[4/5] w-full rounded-[4px] object-cover shadow-[var(--shadow-raised)]"
-          />
+          <div className="relative overflow-hidden rounded-[4px] shadow-[var(--shadow-raised)]">
+            <Image
+              src={HOME_HERO_PHOTO.src}
+              alt="Diaspora Funeral Services staff standing in attendance beside a casket at a family's funeral service"
+              width={HOME_HERO_PHOTO.width}
+              height={HOME_HERO_PHOTO.height}
+              priority
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="aspect-[4/5] w-full origin-[38%_92%] scale-[1.32] object-cover object-[44%_center] brightness-[0.88] saturate-[0.9]"
+            />
+            {/* Low gradient so the photo sits in the dark palette and the logo reads cleanly */}
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-abyss/85 via-abyss/10 to-abyss/30"
+            />
+            <Image
+              src="/brand/dfs-wordmark-light.png"
+              alt=""
+              width={923}
+              height={335}
+              className="absolute right-5 bottom-5 h-auto w-32 opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:w-40"
+            />
+          </div>
           <div className="absolute -bottom-8 -left-4 hidden border border-line-strong bg-abyss/90 px-6 py-5 shadow-[var(--shadow-raised)] backdrop-blur sm:block lg:left-0">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-champagne">
               Name it. We provide it.
