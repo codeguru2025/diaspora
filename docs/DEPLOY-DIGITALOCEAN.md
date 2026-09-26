@@ -44,7 +44,7 @@ Set these in **Settings → App-Level Environment Variables** (the committed
 | Variable | Required now? | Notes |
 |---|---|---|
 | `NODE_ENV` | Yes | `production` |
-| `NEXT_PUBLIC_SITE_URL` | Yes | `https://diasporafunerals.com` — used for canonical URLs, sitemap, JSON-LD |
+| `NEXT_PUBLIC_SITE_URL` | Yes | `https://diasporafuneralservices.com` — used for canonical URLs, sitemap, JSON-LD |
 | `POL263_API_BASE_URL` | No | Leave unset until the DFS tenant is provisioned in POL263 — site runs on local fallback content until then |
 | `POL263_ORG_ID` | No | Same as above |
 | `POL263_PUBLIC_REF` | No | Same as above — required once you connect the live quote engine |
@@ -52,10 +52,10 @@ Set these in **Settings → App-Level Environment Variables** (the committed
 | `NEXT_PUBLIC_POL263_PORTAL_URL` | No | The `/client` portal URL on the DFS domain, once known |
 | `NEXT_PUBLIC_GA4_ID` / `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | No | Consent-gated analytics — leave both blank for no analytics banner at all |
 
-## 3. Custom domain — diasporafunerals.com
+## 3. Custom domain — diasporafuneralservices.com
 
-1. App → **Settings** → **Domains** → add `diasporafunerals.com` (and
-   `www.diasporafunerals.com` if you want both to resolve — already declared
+1. App → **Settings** → **Domains** → add `diasporafuneralservices.com` (and
+   `www.diasporafuneralservices.com` if you want both to resolve — already declared
    in `.do/app.yaml`)
 2. DigitalOcean shows the DNS records to add at your registrar/DNS provider:
    - If DO manages the DNS zone: it configures the records automatically once
@@ -66,7 +66,7 @@ Set these in **Settings → App-Level Environment Variables** (the committed
 3. DO issues a free TLS certificate automatically once the DNS record resolves
    — this can take a few minutes to a few hours depending on DNS propagation
 4. Once the domain is live, update `NEXT_PUBLIC_SITE_URL` to match exactly
-   (`https://diasporafunerals.com`, no trailing slash) and redeploy — this
+   (`https://diasporafuneralservices.com`, no trailing slash) and redeploy — this
    affects the sitemap and canonical URLs, so it's worth getting right before
    the first real crawl
 
