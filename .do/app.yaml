@@ -27,9 +27,9 @@ services:
       branch: main
       deploy_on_push: true
 domains:
-  - domain: diasporafunerals.com
+  - domain: diasporafuneralservices.com
     type: PRIMARY
-  - domain: www.diasporafunerals.com
+  - domain: www.diasporafuneralservices.com
     type: ALIAS
 ingress:
   rules:
@@ -43,7 +43,7 @@ envs:
     value: production
     scope: RUN_AND_BUILD_TIME
   - key: NEXT_PUBLIC_SITE_URL
-    value: https://diasporafunerals.com
+    value: https://diasporafuneralservices.com
     scope: RUN_AND_BUILD_TIME
   # ── POL263 integration — server-side only. The code checks these for an
   #    EMPTY string to fall back to local content, not for a sentinel value —
