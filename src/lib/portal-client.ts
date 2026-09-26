@@ -22,13 +22,13 @@ export async function portalGet<T>(path: string): Promise<T> {
 }
 
 function readXsrfCookie(): string | null {
-  const m = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+  const m = document.cookie.match(/(?:^|;\s*)pol263_XSRF-TOKEN=([^;]*)/);
   return m ? decodeURIComponent(m[1]) : null;
 }
 
 /**
  * POL263 runs csurf (double-submit cookie): any response sets `_csrf` + a readable `XSRF-TOKEN`
- * cookie (relayed onto this origin by the proxy), and every write must echo XSRF-TOKEN back as
+ * cookie (relayed onto this origin by the proxy as `pol263_XSRF-TOKEN`), and every write must echo it back as
  * `x-xsrf-token`. On a first visit there's no cookie yet, so prime it with a cheap GET.
  */
 export async function xsrfToken(): Promise<string | null> {
@@ -64,22 +64,32 @@ export class PortalError extends Error {
   }
 }
 
+async function loadSession(): Promise<PortalStatus> {
+  try {
+    const data = await portalGet<{ client: PortalClient }>("me");
+    return { state: "signed-in", client: data.client };
+  } catch (e) {
+    if (e instanceof PortalError && e.kind === "unconfigured") return { state: "unconfigured" };
+    return { state: "signed-out" };
+  }
+}
+
 export function usePortalSession() {
   const [status, setStatus] = useState<PortalStatus>({ state: "loading" });
 
   const refresh = useCallback(async () => {
-    try {
-      const data = await portalGet<{ client: PortalClient }>("me");
-      setStatus({ state: "signed-in", client: data.client });
-    } catch (e) {
-      if (e instanceof PortalError && e.kind === "unconfigured") setStatus({ state: "unconfigured" });
-      else setStatus({ state: "signed-out" });
-    }
+    setStatus(await loadSession());
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let cancelled = false;
+    loadSession().then((s) => {
+      if (!cancelled) setStatus(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return { status, refresh };
 }

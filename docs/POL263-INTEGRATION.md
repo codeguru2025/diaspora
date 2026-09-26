@@ -39,15 +39,24 @@ With none set, the site runs entirely on local fallback.
 | `getPackages()` / `getRegistrationOptions()` | `GET /api/public/registration-options?ref=` | needs `POL263_PUBLIC_REF`; matched to packages by `products.code` |
 | `getQuote()` | `POST /api/public/quote` | real premium engine; needs `refCode` |
 | `registerPolicy()` | `POST /api/public/register-policy` | needs a `referralCode` field (not `refCode` — confirmed by direct testing 2026-09; also requires `nationalId`) + a real `productVersionId`; otherwise captured as a lead |
-| `createLead()` | `POST /api/public/agent-vcard/:refCode/quote-lead` | ref-scoped fallback path |
+| `createLead()` | `POST /api/public/agent-vcard/:refCode/quote-lead` | ref-scoped fallback path. Sends `source`, `countryOfResidence` and a readable `message` combining the visitor's message and the structured context (the endpoint has no field for either) |
 
 ## Customer portal — transparent proxy (built)
 
 `/api/portal/[...path]` (`src/app/api/portal/[...path]/route.ts` + `src/lib/portal.ts`)
 forwards an **allow-listed** set of paths to `${POL263_API_BASE_URL}/api/client-auth/<path>`,
-relaying cookies both ways (POL263's `Set-Cookie` has its `Domain` stripped so the
-session cookie is first-party to the DFS origin). The browser never talks to POL263
+relaying cookies both ways. POL263's `Set-Cookie` has its `Domain` stripped so the
+session cookie is first-party to the DFS origin, and its name is prefixed with
+`pol263_` (`connect.sid` → `pol263_connect.sid`, `XSRF-TOKEN` → `pol263_XSRF-TOKEN`).
+Only `pol263_*` cookies are forwarded upstream, with the prefix removed, so analytics
+and other DFS-domain cookies never reach POL263. The browser never talks to POL263
 directly, so there is no CORS / SameSite problem.
+
+The proxy re-encodes each path segment, rejects `.`/`..` segments, forwards the
+caller's IP from the platform header (`do-connecting-ip`) rather than a
+client-supplied `X-Forwarded-For`, streams responses (with `Content-Disposition`
+for receipt downloads) and is rate-limited per IP, with a tighter limit on
+sign-in, enrolment and password endpoints.
 
 Proxied paths in use: `login`, `logout`, `me`, `claim`, `enroll`, `policies`,
 `policies/:id/{payments,members,document,beneficiary}`, `claims`, `receipts`,

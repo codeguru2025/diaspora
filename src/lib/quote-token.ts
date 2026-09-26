@@ -14,6 +14,11 @@ export type QuoteTokenData = {
   c: number; // children
   r: string; // country of residence code
   province?: string;
+  /**
+   * The estimate shown when the link was saved. Kept for older links, but never
+   * displayed: `/q/[token]` recalculates the price server-side because anyone can
+   * edit a link.
+   */
   premium?: string | null;
   currency?: string;
 };

@@ -25,7 +25,12 @@ cp .env.example .env.local      # fill in POL263_* when the DFS tenant is provis
 npm run dev                      # http://localhost:3000
 npm run build && npm run start   # production build
 npm run lint
+npm run typecheck
+npm test                         # Vitest unit tests in test/
 ```
+
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and a production
+build on every pull request and every push to `main`.
 
 The site runs fully **without** any POL263 configuration — every page renders from
 local placeholder config and forms capture leads to a server log. Set the
@@ -47,6 +52,10 @@ src/
     pol263.ts      POL263 integration — public reads/writes: branding, packages, quote,
                    leads, registration, funeral requests (server-only, typed, with fallback)
     portal.ts      Transparent proxy to POL263 /api/client-auth/* (server-only)
+    portal-paths.ts     Allow-list of portal paths the proxy may forward
+    api-schemas.ts Zod schemas validating every public API request body
+    rate-limit.ts  Per-IP rate limits for the API routes (in-memory, single instance)
+    client-ip.ts   The visitor's IP as the hosting platform saw it
     portal-client.ts    Client-side portal API + usePortalSession() hook
     selection-store.ts  Per-viewer "funeral in progress" (localStorage) + hook
     application-store.ts  The in-progress /join application (localStorage) + hook

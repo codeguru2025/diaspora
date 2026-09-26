@@ -15,6 +15,7 @@ import { diasporaCountries, zimbabweProvinces } from "@/config/content";
 import { useSelection, clearSelection } from "@/lib/selection-store";
 import {
   useApplication,
+  readApplication,
   writeApplication,
   clearApplication,
   type Dependent,
@@ -79,7 +80,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
       .then((r) => r.json())
       .then((data: Estimate) => {
         setEstimate(data);
-        if (data.productVersionId && data.productVersionId !== app.productVersionId) {
+        if (data.productVersionId && data.productVersionId !== readApplication().productVersionId) {
           writeApplication({ productVersionId: data.productVersionId });
         }
       })

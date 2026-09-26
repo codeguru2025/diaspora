@@ -36,7 +36,30 @@ type Phase =
   | "awaiting_user"
   | "awaiting_otp"
   | "paid"
+  | "unconfirmed"
   | "failed";
+
+/** Polls every 4s for ~160s before handing the choice back to the visitor. */
+const POLL_INTERVAL_MS = 4000;
+const POLL_ATTEMPTS = 40;
+
+/** Remembers, per payment link, that a payment was started — survives the card-checkout redirect. */
+const startedKey = (token: string) => `dfs-pay-started:${token}`;
+function markStarted(token: string, started: boolean) {
+  try {
+    if (started) window.sessionStorage.setItem(startedKey(token), "1");
+    else window.sessionStorage.removeItem(startedKey(token));
+  } catch {
+    /* storage blocked — the visitor just won't get the automatic check on return */
+  }
+}
+function wasStarted(token: string): boolean {
+  try {
+    return window.sessionStorage.getItem(startedKey(token)) === "1";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * A public, tokenized payment page — no login. The token in the URL is the
@@ -53,14 +76,50 @@ export function PublicPayPanel({ token }: { token: string }) {
   const [otp, setOtp] = useState("");
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const alive = useRef(true);
+
   useEffect(() => {
+    alive.current = true;
     return () => {
+      alive.current = false;
       if (pollTimer.current) clearTimeout(pollTimer.current);
     };
   }, []);
 
+  const poll = useCallback(async () => {
+    for (let attempt = 0; attempt <= POLL_ATTEMPTS; attempt++) {
+      if (!alive.current) return;
+      try {
+        const res = await fetch(`/api/pay/${encodeURIComponent(token)}/poll`, { method: "POST" });
+        const data = await res.json();
+        if (data.paid) {
+          markStarted(token, false);
+          setPhase("paid");
+          track({ name: "payment_completed" });
+          return;
+        }
+        if (data.status === "failed" || data.status === "cancelled" || data.status === "expired") {
+          markStarted(token, false);
+          setPhase("failed");
+          setMessage(data.error || "The payment did not go through. Please try again.");
+          return;
+        }
+      } catch {
+        /* transient — keep polling */
+      }
+      await new Promise((resolve) => {
+        pollTimer.current = setTimeout(resolve, POLL_INTERVAL_MS);
+      });
+    }
+    if (!alive.current) return;
+    setPhase("unconfirmed");
+    setMessage(
+      "We haven't had confirmation yet. If you approved the payment, it may still be on its way — check again in a minute.",
+    );
+  }, [token]);
+
   useEffect(() => {
-    fetch(`/api/pay/${token}`)
+    fetch(`/api/pay/${encodeURIComponent(token)}`)
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "We couldn't load this payment link.");
@@ -69,6 +128,7 @@ export function PublicPayPanel({ token }: { token: string }) {
       .then((data) => {
         setDetails(data);
         if (data.status === "paid") {
+          markStarted(token, false);
           setPhase("already_paid");
         } else if (data.status === "expired" || data.status === "cancelled" || data.status === "not_found") {
           setMessage(
@@ -79,6 +139,12 @@ export function PublicPayPanel({ token }: { token: string }) {
                 : "This payment link was cancelled.",
           );
           setPhase("gone");
+        } else if (wasStarted(token)) {
+          // Back from card checkout (or a reload mid-payment): confirm the outcome
+          // before offering to pay again, so nobody pays twice.
+          setPhase("awaiting_user");
+          setMessage("Checking whether your payment went through…");
+          void poll();
         } else {
           setPhase("choose");
         }
@@ -87,42 +153,20 @@ export function PublicPayPanel({ token }: { token: string }) {
         setMessage(e instanceof Error ? e.message : "We couldn't load this payment link.");
         setPhase("unavailable");
       });
-  }, [token]);
+  }, [token, poll]);
 
-  const poll = useCallback(
-    async (attempt = 0) => {
-      try {
-        const res = await fetch(`/api/pay/${token}/poll`, { method: "POST" });
-        const data = await res.json();
-        if (data.paid) {
-          setPhase("paid");
-          track({ name: "payment_completed" });
-          return;
-        }
-        if (data.status === "failed" || data.status === "cancelled" || data.status === "expired") {
-          setPhase("failed");
-          setMessage(data.error || "The payment did not go through. Please try again.");
-          return;
-        }
-      } catch {
-        /* transient — keep polling */
-      }
-      if (attempt > 40) {
-        setPhase("failed");
-        setMessage("We didn't get confirmation in time. Check back shortly, or contact us.");
-        return;
-      }
-      pollTimer.current = setTimeout(() => poll(attempt + 1), 4000);
-    },
-    [token],
-  );
+  function checkAgain() {
+    setPhase("awaiting_user");
+    setMessage("Checking whether your payment went through…");
+    void poll();
+  }
 
   async function initiate() {
     setPhase("initiating");
     setMessage("");
     track({ name: "payment_started" });
     try {
-      const res = await fetch(`/api/pay/${token}/initiate`, {
+      const res = await fetch(`/api/pay/${encodeURIComponent(token)}/initiate`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ method }),
@@ -130,6 +174,7 @@ export function PublicPayPanel({ token }: { token: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "We couldn't start this payment.");
 
+      markStarted(token, true);
       if (data.redirectUrl) {
         setPhase("redirecting");
         window.location.href = data.redirectUrl;
@@ -150,7 +195,7 @@ export function PublicPayPanel({ token }: { token: string }) {
           ? "Open your InnBucks app and authorise the payment with the code below."
           : "Check your phone — approve the payment prompt to continue.",
       );
-      poll();
+      void poll();
     } catch (e) {
       setPhase("failed");
       setMessage(e instanceof Error ? e.message : "Something went wrong. Please try again.");
@@ -161,7 +206,7 @@ export function PublicPayPanel({ token }: { token: string }) {
     e.preventDefault();
     setMessage("");
     try {
-      const res = await fetch(`/api/pay/${token}/otp`, {
+      const res = await fetch(`/api/pay/${encodeURIComponent(token)}/otp`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ otp }),
@@ -169,12 +214,13 @@ export function PublicPayPanel({ token }: { token: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "That code didn't work.");
       if (data.paid) {
+        markStarted(token, false);
         setPhase("paid");
         track({ name: "payment_completed" });
       } else {
         setPhase("awaiting_user");
         setMessage("Check your phone for a payment prompt.");
-        poll();
+        void poll();
       }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "That code didn't work. Please try again.");
@@ -274,6 +320,26 @@ export function PublicPayPanel({ token }: { token: string }) {
             </>
           )}
           <p className="mt-2 text-xs text-mist">This page updates automatically once the payment is confirmed.</p>
+        </div>
+      )}
+
+      {phase === "unconfirmed" && (
+        <div className="mt-4">
+          <p className="text-sm text-stone">{message}</p>
+          <Button type="button" className="mt-4 w-full" onClick={checkAgain}>
+            Check again
+          </Button>
+          <button
+            type="button"
+            onClick={() => {
+              markStarted(token, false);
+              setMessage("");
+              setPhase("choose");
+            }}
+            className="mt-3 w-full text-center text-xs text-mist underline"
+          >
+            It didn&rsquo;t go through — pay another way
+          </button>
         </div>
       )}
 

@@ -19,7 +19,7 @@ export const site = {
     "World-class funeral protection and personalised funeral services for families in Zimbabwe — whether you are here or thousands of kilometres away.",
 
   // Public URL of this site (used for canonical URLs, sitemap, JSON-LD).
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.diasporafuneralservices.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://diasporafunerals.com",
 
   // ---- Contact channels ----
   contact: {

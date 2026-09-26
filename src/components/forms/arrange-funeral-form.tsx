@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle2, Phone } from "lucide-react";
 import { Field, TextInput, TextArea, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { track } from "@/lib/analytics";
 import { site } from "@/config/site";
 import { zimbabweProvinces } from "@/config/content";
@@ -15,6 +16,9 @@ import { zimbabweProvinces } from "@/config/content";
  */
 export function ArrangeFuneralForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
+  const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,17 +26,22 @@ export function ArrangeFuneralForm() {
     track({ name: "funeral_request_started" });
     const fd = new FormData(e.currentTarget);
     const payload = Object.fromEntries(fd.entries());
+    setError("");
     try {
       const res = await fetch("/api/arrange-funeral", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, turnstileToken }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "");
       track({ name: "funeral_request_completed" });
       setStatus("done");
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "");
       setStatus("error");
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     }
   }
 
@@ -114,14 +123,17 @@ export function ArrangeFuneralForm() {
         </Field>
       </div>
 
+      <Turnstile ref={turnstileRef} onToken={setTurnstileToken} className="mt-5" />
+
       {status === "error" && (
         <p className="mt-4 text-sm text-terracotta">
-          Something went wrong. Please call our care line directly on {site.contact.atNeedPhoneDisplay}.
+          {error ? `${error} ` : "Something went wrong. "}
+          Please call our care line directly on {site.contact.atNeedPhoneDisplay}.
         </p>
       )}
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Button type="submit" variant="urgent" size="lg" disabled={status === "submitting"}>
+        <Button type="submit" variant="urgent" size="lg" disabled={!turnstileToken || status === "submitting"}>
           {status === "submitting" ? "Sending…" : "Send this to our care team"}
         </Button>
         <a

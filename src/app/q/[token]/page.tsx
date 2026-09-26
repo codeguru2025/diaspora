@@ -10,6 +10,7 @@ import { packages } from "@/config/packages";
 import { services } from "@/config/services";
 import { diasporaCountries } from "@/config/content";
 import { formatPrice } from "@/lib/format";
+import { getQuote, resolveProductVersionId } from "@/lib/pol263";
 
 export const metadata: Metadata = {
   title: "Your saved quote",
@@ -30,7 +31,19 @@ export default async function SavedQuotePage({
     .map((slug) => services.find((s) => s.slug === slug))
     .filter((s): s is (typeof services)[number] => Boolean(s));
   const country = diasporaCountries.find((c) => c.code === data.r)?.name ?? "Zimbabwe";
-  const price = data.premium ? formatPrice(data.premium, data.currency ?? "USD") : null;
+  // The link only carries the selection. The price is always worked out here from
+  // the same inputs the quote wizard used, so an edited link can't show a made-up figure.
+  const productVersionId = pkg ? await resolveProductVersionId(pkg.slug) : undefined;
+  const members = data.a + data.c;
+  const quote = productVersionId
+    ? await getQuote({
+        productVersionId,
+        memberCount: members,
+        dependentDateOfBirths: Array(Math.max(0, members - 1)).fill(null),
+        currency: "USD",
+      })
+    : null;
+  const price = quote?.data.premium ? formatPrice(quote.data.premium, quote.data.currency) : null;
 
   return (
     <>
