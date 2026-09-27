@@ -34,9 +34,6 @@ export const CASKET_GALLERY_PHOTOS: { src: string; width: number; height: number
   { src: "/images/caskets/custom-casket-showcase.jpg", width: 810, height: 1080, caption: "Bespoke Craftsmanship" },
 ];
 
-/** Homepage hero: DFS staff in attendance at a real DFS-conducted service. */
-export const HOME_HERO_PHOTO = { src: "/images/tribute/img4672.jpg", width: 1600, height: 996 };
-
 /** Best available photo for a service: a real DFS photo first, then stock. */
 export function servicePhoto(slug: string) {
   return SERVICE_PHOTOS[slug] ?? STOCK_SERVICE_PHOTOS[slug];
