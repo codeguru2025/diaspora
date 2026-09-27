@@ -3,7 +3,6 @@ import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
 import { Accordion } from "@/components/ui/accordion";
 import { CtaBand } from "@/components/marketing/sections";
-import { NeedsInput } from "@/components/ui/primitives";
 import { faqCategories } from "@/config/faqs";
 
 export const metadata: Metadata = {
@@ -31,17 +30,15 @@ export default function FaqPage() {
                 items={cat.items.map((item, i) => ({
                   id: `${cat.slug}-${i}`,
                   title: item.q,
-                  content: item.needsInput ? <NeedsInput>{item.a}</NeedsInput> : item.a,
+                  content: item.a,
                 }))}
               />
             </div>
           ))}
         </div>
-
         <p className="mx-auto mt-12 max-w-3xl text-xs text-mist">
-          Answers marked with a dashed underline depend on the DFS funeral policy documentation and
-          are placeholders until confirmed. We never publish policy rules, waiting periods or benefit
-          limits we cannot stand behind.
+          These answers summarise how DFS policies work. Your policy documents set out the full
+          terms, and they take precedence if anything here differs.
         </p>
       </Section>
 

@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
-import { Badge, AvailabilityMark, NeedsInput } from "@/components/ui/primitives";
+import { Badge, AvailabilityMark } from "@/components/ui/primitives";
 import { CtaBand } from "@/components/marketing/sections";
 import { ServiceCard } from "@/components/marketing/service-card";
 import { Recommendations } from "@/components/marketing/recommendations";
@@ -79,7 +79,7 @@ export default async function PackageDetailPage({
             </p>
           ) : (
             <p className="text-sm text-stone">
-              Pricing <NeedsInput>configured in POL263</NeedsInput>
+              Priced to your family&rsquo;s ages
             </p>
           )}
           <Button href={`/get-a-quote?package=${base.slug}`}>Get a {base.name} quote</Button>
@@ -149,9 +149,9 @@ export default async function PackageDetailPage({
 
             <div className="mt-4 rounded-2xl border border-line bg-cream p-6">
               <p className="text-sm text-stone">
-                All package inclusions, benefit amounts, waiting periods and eligibility rules are{" "}
-                <NeedsInput>configured in POL263 and confirmed by DFS</NeedsInput>. This page shows
-                the intended structure.
+                Cover for death from natural causes starts after a 90-day waiting period; accidental
+                death is covered from day one. Adults join at 18–70 and children are covered up to
+                age 20. Your policy documents set out the full terms.
               </p>
             </div>
           </aside>

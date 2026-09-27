@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatPrice, scheduleLabel } from "@/lib/format";
-import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import type { ResolvedPackage } from "@/lib/pol263";
 import { SERVICE_PHOTOS } from "@/lib/service-photos";
@@ -55,7 +55,7 @@ export function PackageCard({
           </p>
         ) : (
           <p className="text-sm text-stone">
-            Pricing <NeedsInput>configured in POL263</NeedsInput>
+            Priced to your family&rsquo;s ages — get a quote in a minute
           </p>
         )}
       </div>

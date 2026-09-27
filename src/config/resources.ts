@@ -1,9 +1,8 @@
 /**
  * Resource / content centre (MEGA PROMPT §50).
  *
- * Placeholder article stubs to establish the information architecture and SEO
- * surface. Full article bodies must be written / reviewed by DFS. Each stub has a
- * short intro and an outline so the shape is clear.
+ * Article metadata. Full bodies live in resource-articles.ts, one section per
+ * outline entry.
  */
 
 export type ResourceCategory = {
@@ -26,7 +25,7 @@ export type Resource = {
   title: string;
   category: ResourceCategory["slug"];
   excerpt: string;
-  /** Outline of the intended article — for DFS to write against. */
+  /** Section headings, in order — matches the body in resource-articles.ts. */
   outline: string[];
   readingTime: string;
   updated: string;
@@ -46,7 +45,7 @@ export const resources: Resource[] = [
       "What to expect in the days before the funeral",
     ],
     readingTime: "6 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "funeral-planning-checklist",
@@ -55,7 +54,7 @@ export const resources: Resource[] = [
     excerpt: "Everything worth deciding in advance, in one printable list — from the service and venue to personalisation and hospitality.",
     outline: ["Service and venue decisions", "The coffin or casket", "Personalisation choices", "Media and memories", "Hospitality and travel", "Who does what on the day"],
     readingTime: "5 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "diaspora-funeral-planning-guide",
@@ -70,7 +69,7 @@ export const resources: Resource[] = [
       "Travelling home for a funeral",
     ],
     readingTime: "8 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "how-to-plan-a-funeral-remotely",
@@ -79,7 +78,7 @@ export const resources: Resource[] = [
     excerpt: "A practical walkthrough of arranging a funeral from another country with DFS coordinating on the ground.",
     outline: ["Making the first contact", "Decisions you make vs. decisions we handle", "Staying informed", "Livestreaming and attending remotely", "After the funeral"],
     readingTime: "6 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "understanding-funeral-cover",
@@ -88,7 +87,7 @@ export const resources: Resource[] = [
     excerpt: "What funeral cover actually pays for, the questions worth asking, and why fulfilment matters as much as the payout.",
     outline: ["Cover vs. fulfilment", "Questions to ask any funeral cover provider", "What personalisation options mean in practice", "Cover for family abroad and at home"],
     readingTime: "5 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "preparing-for-travel-home-after-a-bereavement",
@@ -97,7 +96,7 @@ export const resources: Resource[] = [
     excerpt: "A short guide to getting home for a funeral with as little added stress as possible.",
     outline: ["Booking travel under pressure", "Documents to carry", "What a travelling pack covers", "Arriving and being supported on the ground"],
     readingTime: "4 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "why-funeral-personalisation-matters",
@@ -106,7 +105,7 @@ export const resources: Resource[] = [
     excerpt: "A farewell is deeply personal. A short reflection on the details that make it feel like theirs.",
     outline: ["The difference a personal detail makes", "Personalisation across traditions", "Balancing personalisation with dignity and cost"],
     readingTime: "4 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "will-writing-basics",
@@ -115,7 +114,7 @@ export const resources: Resource[] = [
     excerpt: "What a will does, what to think about before writing one, and where independent legal advice is important.",
     outline: ["What a will covers", "Things to decide first", "Common mistakes", "When to get independent legal advice", "How the DFS will-writing service helps"],
     readingTime: "6 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
   {
     slug: "supporting-someone-who-is-grieving",
@@ -124,7 +123,7 @@ export const resources: Resource[] = [
     excerpt: "Practical, gentle ways to support a grieving family member — including from a distance.",
     outline: ["What helps and what to avoid", "Supporting from abroad", "When to encourage further support", "Looking after yourself too"],
     readingTime: "5 min",
-    updated: "CONFIGURE",
+    updated: "27 September 2026",
   },
 ];
 

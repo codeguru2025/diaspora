@@ -2,42 +2,73 @@
  * Shared marketing content: testimonials structure, trust markers, diaspora data,
  * "how it works" steps, and the "Name it. We provide it." showcase list.
  *
- * Testimonials and statistics are NOT fabricated (MEGA PROMPT §27, §28). The
- * testimonial array is empty by default; `PLACEHOLDER_TESTIMONIALS` exists only
- * for local visual development and must never ship.
+ * Testimonials and statistics are NOT fabricated (MEGA PROMPT §27, §28). A
+ * testimonial is only ever a real customer's words, published with their consent.
+ * `familyStories` are illustrative scenarios, always labelled as such on the page.
  */
 
 export type Testimonial = {
+  /** How the customer asked to be named, e.g. "Rudo M." or "A family in Gwanda". */
   name: string;
   location: string;
+  /** Package or service they used, e.g. "Classic package". */
   service: string;
+  /** Their own words. Light edits for length only, approved by them. */
   quote: string;
-  photo?: string;
+  /** ISO date the customer approved the final wording for publication. Required. */
+  consentDate: string;
+  /** Optional 1–5 rating they gave. */
+  rating?: number;
 };
 
-/** Real testimonials go here once DFS supplies signed-off quotes. */
+/**
+ * Real, approved testimonials. Collected through /share-your-story (lands in
+ * POL263 as a "testimonial" lead); add one here only once the customer has
+ * approved the final wording, and record that date in `consentDate`.
+ */
 export const testimonials: Testimonial[] = [];
 
-/** Dev-only. Do not render in production builds. */
-export const PLACEHOLDER_TESTIMONIALS: Testimonial[] = [
+export type FamilyStory = {
+  title: string;
+  /** Who and where — a composite, not a real family. */
+  setting: string;
+  challenge: string;
+  howWeHelped: string;
+  services: string[];
+};
+
+/**
+ * Illustrative stories showing how DFS works in typical situations. These are
+ * composites, not real customers, and are always rendered with an
+ * "Illustrative example" label. Never present them as testimonials.
+ */
+export const familyStories: FamilyStory[] = [
   {
-    name: "Placeholder name",
-    location: "Placeholder, United Kingdom",
-    service: "Prestige package · Diaspora",
-    quote:
-      "PLACEHOLDER TESTIMONIAL — replace with a real, signed-off customer quote. This copy exists only so the layout can be reviewed.",
+    title: "Arranging a mother's funeral from London",
+    setting: "A daughter in London; her mother in Gwanda.",
+    challenge:
+      "The call came at night, UK time. She couldn't fly out for four days, and her brothers at home were unsure what to book or who to pay.",
+    howWeHelped:
+      "One call to the care line and a Funeral Care Consultant took over: collection, the casket, the tent and catering at the homestead, and a schedule agreed with the whole family on a group call. She followed every step by SMS and watched the service live with relatives in three countries.",
+    services: ["Classic package", "Funeral livestreaming", "Catering", "Décor, tents & seating"],
   },
   {
-    name: "Placeholder name",
-    location: "Bulawayo, Zimbabwe",
-    service: "Classic package",
-    quote: "PLACEHOLDER TESTIMONIAL — replace with a real, signed-off customer quote.",
+    title: "A personal farewell for a father in Bulawayo",
+    setting: "A family in Bulawayo, with a son in Johannesburg.",
+    challenge:
+      "They wanted the day to feel like him — his church, his hymns, his favourite colours — without the family spending the week chasing suppliers.",
+    howWeHelped:
+      "We designed the ceremony with them: a personalised coffin lace and memorial banner in his colours, printed programmes with his photographs, and a photographer to capture the day. The family spent the week together instead of on the phone.",
+    services: ["Prestige package", "Personalised coffin lace", "Memorial banner", "Funeral programmes"],
   },
   {
-    name: "Placeholder name",
-    location: "Placeholder, Australia",
-    service: "Arranged a funeral remotely",
-    quote: "PLACEHOLDER TESTIMONIAL — replace with a real, signed-off customer quote.",
+    title: "Coming home for a grandmother's burial",
+    setting: "A family of five travelling from Perth to rural Masvingo.",
+    challenge:
+      "Long flights, a connection in Johannesburg, and a four-hour drive at the end — with children, and in grief.",
+    howWeHelped:
+      "We built the funeral schedule around their arrival, prepared a family travelling pack, and arranged support on the ground from the airport. They arrived to arrangements already in place.",
+    services: ["Essential package", "Family travelling pack", "Travel & attendance assistance"],
   },
 ];
 
@@ -47,13 +78,13 @@ export const PLACEHOLDER_TESTIMONIALS: Testimonial[] = [
  * supplies the figure — do not invent numbers.
  */
 export const trustMarkers: { label: string; detail: string; needsInput?: boolean }[] = [
+  { label: "24 families served", detail: "Families who have trusted us with a farewell so far — and every one mattered." },
+  { label: "Built for the diaspora", detail: "Protect family in Zimbabwe from wherever you live, and stay informed from afar." },
   { label: "Nationwide Zimbabwe", detail: "Coverage for families wherever they are in the country." },
   { label: "Secure online joining", detail: "Join, pay and manage your policy online." },
   { label: "Transparent packages", detail: "Four clear packages, with every inclusion and add-on shown." },
   { label: "SMS & digital updates", detail: "Kept informed from confirmation to the day itself." },
   { label: "Administered on POL263", detail: "Policy administration and communications run on an established platform." },
-  { label: "Families served", detail: "STATISTIC REQUIRED FROM DFS", needsInput: true },
-  { label: "Years of service", detail: "STATISTIC REQUIRED FROM DFS", needsInput: true },
 ];
 
 export const howItWorks: { title: string; body: string }[] = [

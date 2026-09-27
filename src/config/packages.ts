@@ -3,15 +3,13 @@
  *
  * IMPORTANT (see MEGA PROMPT §7, §58): no real monetary prices, benefit limits,
  * waiting periods, eligibility rules or policy terms are invented here. Every such
- * value is `null` / `CONFIGURE` and is intended to be resolved at runtime from the
+ * value is `null` and is intended to be resolved at runtime from the
  * POL263 product / product_version records for the DFS organisation
  * (`lib/pol263.ts` → `getPackages()`), which map one DFS package → one POL263 product.
  *
  * `pol263ProductCode` is the join key: set it to the `products.code` in POL263 once
  * the DFS org's products are configured.
  */
-
-import { CONFIGURE } from "./site";
 
 export type ComparisonValue = "included" | "addon" | "not-available";
 
@@ -50,7 +48,7 @@ export const packages: PackageTier[] = [
       "Dignified coffin and hearse",
       "Burial arrangement coordination",
       "Digital communication and SMS updates",
-      CONFIGURE,
+      "US$1,000 funeral cover for up to 2 adults and 4 children",
     ],
     concierge: "Digital service with standard customer support.",
     mostPopular: false,
@@ -71,7 +69,7 @@ export const packages: PackageTier[] = [
       "Enhanced casket and ceremony options",
       "Ceremony and venue support",
       "Selected personalisation add-ons available",
-      CONFIGURE,
+      "US$2,500 funeral cover for up to 2 adults and 4 children",
     ],
     concierge: "Priority customer support.",
     mostPopular: false,
@@ -92,7 +90,7 @@ export const packages: PackageTier[] = [
       "Premium casket and floral arrangements",
       "Photography, videography and livestreaming available",
       "Memorial collateral and personalised items",
-      CONFIGURE,
+      "US$5,000 funeral cover for up to 2 adults and 4 children",
     ],
     concierge: "Dedicated Funeral Care support.",
     mostPopular: false,
@@ -113,7 +111,7 @@ export const packages: PackageTier[] = [
       "Fully personalised funeral design",
       "Custom caskets, décor and memorial pieces",
       "Highly personalised funeral coordination",
-      CONFIGURE,
+      "US$10,000 funeral cover for up to 2 adults and 4 children",
     ],
     concierge: "Highly personalised, end-to-end funeral coordination.",
     mostPopular: false,

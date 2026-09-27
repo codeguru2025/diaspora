@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
-import { Badge, AvailabilityMark, NeedsInput } from "@/components/ui/primitives";
+import { Badge, AvailabilityMark } from "@/components/ui/primitives";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { ServiceCard } from "@/components/marketing/service-card";
 import { AddToFuneralButton } from "@/components/marketing/add-to-funeral-button";
@@ -19,7 +19,7 @@ import {
   pricingModelLabels,
 } from "@/config/services";
 import { packages } from "@/config/packages";
-import { SERVICE_PHOTOS } from "@/lib/service-photos";
+import { servicePhoto } from "@/lib/service-photos";
 
 export function generateStaticParams() {
   return services.map((s) => ({ slug: s.slug }));
@@ -51,6 +51,7 @@ export default async function ServiceDetailPage({
     .filter((x) => x.slug !== s.slug)
     .slice(0, 3);
   const recommendations = related.length > 0 ? related : alsoInCategory;
+  const photo = servicePhoto(s.slug);
 
   return (
     <>
@@ -124,7 +125,7 @@ export default async function ServiceDetailPage({
             <div className="mt-8 rounded-xl bg-cream p-4 text-sm text-stone">
               <p>
                 <span className="font-medium text-ink">Lead time:</span>{" "}
-                <NeedsInput>{s.leadTime}</NeedsInput>
+                {s.leadTime}
               </p>
               <p className="mt-1">
                 Design options, materials, examples and exact specifications are confirmed with you —
@@ -146,12 +147,12 @@ export default async function ServiceDetailPage({
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="dfs-card rounded-[4px] p-6">
-              {SERVICE_PHOTOS[s.slug] ? (
+              {photo ? (
                 <Image
-                  src={SERVICE_PHOTOS[s.slug].src}
+                  src={photo.src}
                   alt={s.name}
-                  width={SERVICE_PHOTOS[s.slug].width}
-                  height={SERVICE_PHOTOS[s.slug].height}
+                  width={photo.width}
+                  height={photo.height}
                   className="mb-4 aspect-[4/3] w-full rounded-xl object-cover"
                 />
               ) : (

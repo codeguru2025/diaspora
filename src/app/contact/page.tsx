@@ -3,7 +3,6 @@ import { Phone, Mail, MessageCircle, MapPin, Clock } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { LeadForm } from "@/components/forms/lead-form";
-import { NeedsInput } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -45,10 +44,10 @@ export default async function ContactPage({
 
             <div className="mt-8 space-y-2 text-sm text-stone">
               <p className="flex items-center gap-2">
-                <MapPin className="size-4" /> <NeedsInput>{site.contact.officeAddress}</NeedsInput>
+                <MapPin className="size-4" /> {site.contact.officeAddress ?? site.coverage}
               </p>
               <p className="flex items-center gap-2">
-                <Clock className="size-4" /> <NeedsInput>{site.contact.officeHours}</NeedsInput>
+                <Clock className="size-4" /> {site.contact.officeHours}
               </p>
             </div>
 

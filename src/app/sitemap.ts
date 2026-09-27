@@ -29,6 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/travel-pack",
     "/will-writing",
     "/grief-support",
+    "/share-your-story",
     "/legal/terms",
     "/legal/privacy",
     "/legal/cookies",

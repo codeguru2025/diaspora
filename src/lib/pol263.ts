@@ -303,7 +303,8 @@ export type LeadInput = {
     | "bespoke_request"
     | "callback"
     | "diaspora"
-    | "tribute_request";
+    | "tribute_request"
+    | "testimonial";
   productInterest?: string;
   countryOfResidence?: string;
   message?: string;

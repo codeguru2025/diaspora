@@ -9,6 +9,12 @@ describe("leadSchema", () => {
     expect(r.email).toBeUndefined();
   });
 
+  it("keeps the testimonial source for share-your-story submissions", () => {
+    const r = leadSchema.parse({ firstName: "Rudo", phone: "+44 7700", source: "testimonial", message: "Thank you" });
+    expect(r.source).toBe("testimonial");
+    expect(r.message).toBe("Thank you");
+  });
+
   it("requires a name and phone", () => {
     expect(leadSchema.safeParse({ firstName: "", phone: "1" }).success).toBe(false);
   });

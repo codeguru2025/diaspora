@@ -39,6 +39,7 @@ const LEAD_SOURCES = [
   "callback",
   "diaspora",
   "tribute_request",
+  "testimonial",
 ] as const satisfies readonly LeadInput["source"][];
 
 export const leadSchema = z.object({

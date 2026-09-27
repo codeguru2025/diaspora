@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
 import { CtaBand, TrustStrip } from "@/components/marketing/sections";
-import { NeedsInput } from "@/components/ui/primitives";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -76,13 +75,19 @@ export default function AboutPage() {
             <strong>your family, your wishes, our commitment to make it happen.</strong>
           </p>
 
-          <h2>Our story, our people, our track record</h2>
+          <h2>Our people</h2>
           <p>
-            <NeedsInput>
-              CONTENT REQUIRED FROM DFS — founding story, leadership, years of operation, number of
-              families served, licensing and any accreditations or partnerships. We do not publish
-              these until DFS confirms them.
-            </NeedsInput>
+            Behind every DFS funeral is a team on the ground in Zimbabwe: funeral care consultants
+            who take the first call, coordinators who work with churches, venues and suppliers, and
+            the people who set up the tent, receive the mourners and make sure the day runs as the
+            family planned it. They know the customs, the distances and the logistics, so a family
+            abroad doesn&rsquo;t have to manage them alone.
+          </p>
+          <p>
+            We are accountable to the families we serve. Every policy is administered on an
+            established platform, every payment is receipted, and every family has a real person to speak to
+            when it matters most. If something isn&rsquo;t right, we want to hear about it,
+            and we will put it right.
           </p>
         </div>
       </Section>
