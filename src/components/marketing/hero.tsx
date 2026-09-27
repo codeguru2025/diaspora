@@ -54,14 +54,29 @@ export function HomeHero() {
             aria-hidden
             className="absolute inset-0 translate-x-4 translate-y-4 rounded-[4px] border border-champagne/35 lg:left-6"
           />
-          <Image
-            src={HOME_HERO_PHOTO.src}
-            alt="A father embracing his daughter"
-            width={HOME_HERO_PHOTO.width}
-            height={HOME_HERO_PHOTO.height}
-            priority
-            className="relative aspect-[4/5] w-full rounded-[4px] object-cover shadow-[var(--shadow-raised)]"
-          />
+          <div className="relative overflow-hidden rounded-[4px] shadow-[var(--shadow-raised)]">
+            <Image
+              src={HOME_HERO_PHOTO.src}
+              alt="A father embracing his daughter"
+              width={HOME_HERO_PHOTO.width}
+              height={HOME_HERO_PHOTO.height}
+              priority
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="aspect-[4/5] w-full object-cover"
+            />
+            {/* Soft bottom gradient so the wordmark reads cleanly without dulling the photo */}
+            <div
+              aria-hidden
+              className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-abyss/75 to-transparent"
+            />
+            <Image
+              src="/brand/dfs-wordmark-light.png"
+              alt=""
+              width={923}
+              height={335}
+              className="absolute right-5 bottom-5 h-auto w-32 opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:w-40"
+            />
+          </div>
           <div className="absolute -bottom-8 -left-4 hidden border border-line-strong bg-abyss/90 px-6 py-5 shadow-[var(--shadow-raised)] backdrop-blur sm:block lg:left-0">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-champagne">
               Name it. We provide it.
