@@ -1,11 +1,10 @@
 /**
  * Global site configuration for the Diaspora Funeral Services (DFS) website.
  *
- * Everything here that is a real-world business fact — phone numbers, email,
- * registration details, physical addresses — is a PLACEHOLDER marked `CONFIGURE`.
- * Do not treat these as accurate. They exist so the UI renders; DFS must supply
- * the real values (ideally later sourced from the POL263 organisation record via
- * `lib/pol263.ts` → `getBranding()`).
+ * Real-world business facts (phone numbers, emails, addresses, registration
+ * details) must come from DFS. Values DFS hasn't supplied yet are `null` and the
+ * UI omits them rather than showing a placeholder (ideally later sourced from the
+ * POL263 organisation record via `lib/pol263.ts` → `getBranding()`).
  */
 
 export const CONFIGURE = "CONFIGURE THIS VALUE" as const;
@@ -34,16 +33,13 @@ export const site = {
     whatsappDisplay: "+44 7395 511836",
     // Configurable click-to-chat link. No WhatsApp Business API is assumed.
     whatsappHref: "https://wa.me/447395511836", // CONFIGURE — confirm this number is on WhatsApp
-    officeAddress: CONFIGURE,
-    officeHours: CONFIGURE,
+    officeAddress: "312 Mership House, Bulawayo, Zimbabwe" as string | null,
+    officeHours: "Urgent help at any hour · enquiries answered as soon as we can",
   },
 
   social: {
     facebook: "https://facebook.com/diasporafuneralservice",
     instagram: "https://instagram.com/diasporafuneralservice",
-    // LinkedIn company pages use an independently-chosen slug, not the handle
-    // used on other platforms — confirm the real /company/ URL with DFS.
-    linkedin: CONFIGURE,
     youtube: "https://youtube.com/@diasporafuneralservice",
   },
 
@@ -51,8 +47,9 @@ export const site = {
   coverage: "Serving families nationwide across Zimbabwe.",
 
   // Legal / regulatory footer line — MUST be reviewed and supplied by DFS.
-  legalEntity: CONFIGURE,
-  regulatoryLine: CONFIGURE,
+  legalEntity: "Diaspora Funeral Services is a trading name of Thobela Diaspora Logistics" as string | null,
+  // Omitted from the footer while null.
+  regulatoryLine: null as string | null,
 } as const;
 
 /** Primary calls-to-action, reused across the site so wording stays consistent. */
@@ -149,6 +146,7 @@ export const footerNav: { title: string; links: NavItem[] }[] = [
       { label: "Arrange a Funeral Now", href: "/arrange-a-funeral" },
       { label: "Customer Login", href: "/account" },
       { label: "Request a Callback", href: "/contact#callback" },
+      { label: "Share Your Story", href: "/share-your-story" },
     ],
   },
   {

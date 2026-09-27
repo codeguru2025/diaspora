@@ -32,25 +32,34 @@ export const sampleTribute: SampleTribute = {
   slug: "sample",
   name: "[Example] Tendai Moyo",
   dates: "1958 – 2026",
-  photoCaption: "Photography direction: a warm, dignified portrait supplied by the family.",
+  photoCaption: "A lit candle and roses in memory — on a real page, a portrait supplied by the family.",
   summary:
     "This is a sample tribute page, shown so families and DFS can review the format before " +
     "any real memorial goes live. A real page is written and supplied by the family.",
   service: [
-    { label: "Service", detail: "CONFIGURE — venue, date and time" },
-    { label: "Burial", detail: "CONFIGURE — location" },
-    { label: "Livestream", detail: "CONFIGURE — link shared with the family closer to the day" },
+    { label: "Service", detail: "Saturday 14 November, 10:00 — Methodist Church, Mabelreign, Harare" },
+    { label: "Burial", detail: "Warren Hills Cemetery, Harare, following the service" },
+    { label: "Livestream", detail: "Link shared with family and friends the day before" },
   ],
   messages: [
     {
-      name: "Example guest",
+      name: "Rudo M.",
       location: "London, UK",
-      message: "A placeholder condolence message, shown to illustrate the tribute wall layout.",
+      message:
+        "Baba, you taught us that family is everything. We are carrying your laughter and your " +
+        "kindness with us. Rest well.",
     },
     {
-      name: "Example guest",
+      name: "Farai C.",
       location: "Harare, Zimbabwe",
-      message: "On a real tribute page, messages like this are written by family and friends.",
+      message:
+        "A gentle, generous man who always had time for everyone who came through his gate. " +
+        "Our thoughts are with the whole Moyo family.",
+    },
+    {
+      name: "Nyasha & family",
+      location: "Johannesburg, South Africa",
+      message: "Watching from afar but standing with you in spirit. Lala ngoxolo, sekuru.",
     },
   ],
 };

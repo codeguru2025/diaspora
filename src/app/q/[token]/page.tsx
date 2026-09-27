@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
-import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { RestoreQuote } from "@/components/marketing/restore-quote";
 import { decodeQuote } from "@/lib/quote-token";
 import { packages } from "@/config/packages";
@@ -92,8 +92,7 @@ export default async function SavedQuotePage({
               </p>
             ) : (
               <p className="mt-1 text-lg">
-                Confirmed by a consultant —{" "}
-                <NeedsInput>pricing engine not yet connected</NeedsInput>
+                Confirmed by a Funeral Care Consultant
               </p>
             )}
             <p className="mt-2 text-xs text-ivory/60">

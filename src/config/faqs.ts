@@ -1,16 +1,14 @@
 /**
  * FAQ content (MEGA PROMPT §51).
  *
- * CRITICAL: Do NOT invent policy rules. Every answer that depends on DFS policy
- * documentation is written as a clearly-marked placeholder. These must be replaced
- * with DFS-supplied wording (ideally sourced from POL263 `terms_and_conditions`).
+ * CRITICAL: Do NOT invent policy rules. Policy answers below mirror the DFS product
+ * rules configured in POL263 (registration-options: eligibility ages, dependant age,
+ * waiting and grace periods, member limits — identical across all four packages as
+ * of 2026-09-27). If those rules change in POL263, update these answers too.
  */
 
 export type Faq = { q: string; a: string; needsInput?: boolean };
 export type FaqCategory = { slug: string; title: string; items: Faq[] };
-
-const TBC =
-  "CONTENT REQUIRED FROM DFS — this answer depends on the funeral policy documentation and must be confirmed before publishing.";
 
 export const faqCategories: FaqCategory[] = [
   {
@@ -23,16 +21,16 @@ export const faqCategories: FaqCategory[] = [
       },
       { q: "Can I join from outside Zimbabwe?", a: "Yes. DFS is built for families in the diaspora. You can join online, pay digitally, and manage everything remotely while your family is covered in Zimbabwe." },
       { q: "What information do I need to join?", a: "Basic details for yourself and the family members you want to cover. The online application tells you exactly what is needed at each step." },
-      { q: "Is there a waiting period before cover starts?", a: TBC, needsInput: true },
+      { q: "Is there a waiting period before cover starts?", a: "Yes. Cover for death from natural causes starts after a 90-day waiting period from your first premium. Accidental death is covered from the day your cover starts." },
     ],
   },
   {
     slug: "eligibility",
     title: "Eligibility",
     items: [
-      { q: "Who can be covered on a DFS policy?", a: TBC, needsInput: true },
-      { q: "Is there an age limit to join or to add a family member?", a: TBC, needsInput: true },
-      { q: "Can I cover extended family members?", a: TBC, needsInput: true },
+      { q: "Who can be covered on a DFS policy?", a: "The main member (the person taking out the policy), their spouse or partner, and their children. The main member does not have to live in Zimbabwe — many families cover relatives back home from abroad." },
+      { q: "Is there an age limit to join or to add a family member?", a: "The main member and any adult on the policy must be between 18 and 70 when they join. Children can be covered up to age 20." },
+      { q: "Can I cover extended family members?", a: "Not on the current packages, which cover you, your spouse or partner and your children. If you want to protect parents or other relatives, speak to a Funeral Care Consultant about a separate policy for them." },
     ],
   },
   {
@@ -41,7 +39,7 @@ export const faqCategories: FaqCategory[] = [
     items: [
       { q: "How do I pay my premiums?", a: "Premiums are paid digitally. Supported payment methods are configured for your country and shown at checkout and in your customer portal." },
       { q: "Can someone in the diaspora pay for a policy that covers family in Zimbabwe?", a: "Yes. This is one of the core reasons DFS exists." },
-      { q: "What happens if I miss a payment?", a: TBC, needsInput: true },
+      { q: "What happens if I miss a payment?", a: "You have a 30-day grace period to catch up, and your cover continues during that time. If the premium is still unpaid after 30 days, the policy lapses. To reinstate it you pay the outstanding arrears, and a new waiting period applies." },
       { q: "Will I get a receipt?", a: "Yes. Receipts and statements are available in your customer portal and sent to you." },
     ],
   },
@@ -50,7 +48,7 @@ export const faqCategories: FaqCategory[] = [
     title: "Family & beneficiaries",
     items: [
       { q: "Can I change the family members on my policy?", a: "Yes. You can request changes through your customer portal or your Funeral Care Consultant. Changes are reviewed before they take effect." },
-      { q: "How many family members can I add?", a: TBC, needsInput: true },
+      { q: "How many family members can I add?", a: "Up to six people in total: two adults (you and your spouse or partner) and up to four children." },
     ],
   },
   {
@@ -58,8 +56,8 @@ export const faqCategories: FaqCategory[] = [
     title: "When a death occurs",
     items: [
       { q: "What do I do when a family member passes away?", a: "Contact us straight away — by phone, WhatsApp, or through your customer portal — and our team takes over the arrangements. If you are in the diaspora, we keep you informed at every step." },
-      { q: "What documents are needed?", a: TBC, needsInput: true },
-      { q: "How quickly can a funeral be arranged?", a: TBC, needsInput: true },
+      { q: "What documents are needed?", a: "Your policy number, a copy of the deceased’s ID, and the death certificate or burial order. If some documents take time to obtain, contact us anyway — we will start the arrangements and tell you exactly what is outstanding." },
+      { q: "How quickly can a funeral be arranged?", a: "Most funerals take place within a few days of the family contacting us. The exact timing depends on the family’s wishes, the documents, the burial location and any relatives travelling home. We agree the schedule with you and keep you updated at every step." },
     ],
   },
   {
@@ -92,7 +90,7 @@ export const faqCategories: FaqCategory[] = [
     slug: "travel",
     title: "Travel",
     items: [
-      { q: "What is in a travelling pack?", a: "The contents are configurable and we finalise them with you. They are designed around travelling home for a funeral — essentials, personal care, and funeral-related items.", needsInput: true },
+      { q: "What is in a travelling pack?", a: "The contents are configurable and we finalise them with you. They are designed around travelling home for a funeral — essentials, personal care, and funeral-related items." },
       { q: "Can DFS help with travel logistics?", a: "Travel and attendance assistance is available as a service — logistics guidance and on-the-ground support." },
     ],
   },
@@ -120,15 +118,15 @@ export const faqCategories: FaqCategory[] = [
         q: "Is the will-writing service really free?",
         a: "Yes, guided will-preparation assistance is included with every DFS policy. It assists with will preparation and does not replace independent legal advice where that is required.",
       },
-      { q: "Is a will prepared this way legally valid?", a: TBC, needsInput: true },
+      { q: "Is a will prepared this way legally valid?", a: "A will is valid in Zimbabwe when it is in writing, signed by you, and signed by two witnesses who are present at the same time and who do not benefit from the will. We guide you through each of these steps. For complicated estates, such as property in more than one country or business interests, we recommend independent legal advice as well." },
     ],
   },
   {
     slug: "cancellation",
     title: "Changes & cancellation",
     items: [
-      { q: "Can I cancel my policy?", a: TBC, needsInput: true },
-      { q: "Can I upgrade or downgrade my package?", a: TBC, needsInput: true },
+      { q: "Can I cancel my policy?", a: "Yes. Contact us or your Funeral Care Consultant to cancel. Before anything changes, we explain what cancelling means for your cover and for any family members on the policy." },
+      { q: "Can I upgrade or downgrade my package?", a: "Yes. Speak to your Funeral Care Consultant or request it through your customer portal. We will show you the new premium first. When you upgrade, the extra cover may carry its own waiting period, and we confirm this before the change takes effect." },
     ],
   },
   {
@@ -136,7 +134,7 @@ export const faqCategories: FaqCategory[] = [
     title: "Customer support",
     items: [
       { q: "How do I speak to a person?", a: "Call us, message us on WhatsApp, or request a callback. Prestige and Bespoke customers have a dedicated Funeral Care Consultant." },
-      { q: "What are your support hours?", a: "CONTENT REQUIRED FROM DFS — support hours.", needsInput: true },
+      { q: "What are your support hours?", a: "If a death has occurred, contact us straight away, at any hour. It is always treated as urgent. For everything else, call, WhatsApp or email and we will reply as soon as we can, or request a callback at a time that suits you." },
     ],
   },
 ];

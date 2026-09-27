@@ -116,8 +116,8 @@ export function PackageComparison() {
         </span>
       </p>
       <p className="mt-3 text-xs text-mist">
-        This matrix reflects the intended package structure. Final inclusions, limits and terms are
-        configured in POL263 and confirmed by DFS.
+        A summary of what each package includes. Your policy documents set out the full inclusions,
+        limits and terms.
       </p>
     </div>
   );

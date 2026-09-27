@@ -1,3 +1,5 @@
+import { STOCK_SERVICE_PHOTOS } from "@/lib/stock-photos";
+
 /** Real product photos supplied by DFS, keyed by service slug. */
 export const SERVICE_PHOTOS: Record<string, { src: string; width: number; height: number }> = {
   "premium-casket": { src: "/images/caskets/premium-casket.jpg", width: 1080, height: 890 },
@@ -34,3 +36,8 @@ export const CASKET_GALLERY_PHOTOS: { src: string; width: number; height: number
 
 /** Homepage hero: DFS staff in attendance at a real DFS-conducted service. */
 export const HOME_HERO_PHOTO = { src: "/images/tribute/img4672.jpg", width: 1600, height: 996 };
+
+/** Best available photo for a service: a real DFS photo first, then stock. */
+export function servicePhoto(slug: string) {
+  return SERVICE_PHOTOS[slug] ?? STOCK_SERVICE_PHOTOS[slug];
+}

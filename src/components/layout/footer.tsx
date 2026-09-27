@@ -1,22 +1,20 @@
 import Link from "next/link";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { NeedsInput } from "@/components/ui/primitives";
-import { FacebookIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from "@/components/ui/social-icons";
-import { footerNav, site, CONFIGURE } from "@/config/site";
+import { FacebookIcon, InstagramIcon, YoutubeIcon } from "@/components/ui/social-icons";
+import { footerNav, site } from "@/config/site";
 import { Logo } from "./logo";
 
 const socialIcons = {
   facebook: FacebookIcon,
   instagram: InstagramIcon,
-  linkedin: LinkedinIcon,
   youtube: YoutubeIcon,
 } as const;
 
 export function Footer() {
   const socialLinks = (Object.keys(socialIcons) as (keyof typeof socialIcons)[])
     .map((key) => ({ key, href: site.social[key], Icon: socialIcons[key] }))
-    .filter((s) => s.href !== CONFIGURE);
+    .filter((s): s is typeof s & { href: string } => Boolean(s.href));
 
   return (
     <footer className="relative bg-abyss text-ivory/70">
@@ -85,9 +83,9 @@ export function Footer() {
             © {new Date().getFullYear()} {site.name}. Administered on the POL263 platform.
           </p>
           <p className="mt-2 max-w-3xl">
-            <NeedsInput>{site.legalEntity}</NeedsInput> ·{" "}
-            <NeedsInput>{site.regulatoryLine}</NeedsInput> — regulatory, licensing and policy
-            wording to be confirmed and supplied by DFS before launch.
+            {[site.legalEntity, site.regulatoryLine].filter(Boolean).join(" · ")}
+            {site.legalEntity || site.regulatoryLine ? " · " : ""}
+            Cover is subject to the terms, waiting periods and exclusions in your policy documents.
           </p>
         </div>
       </Container>

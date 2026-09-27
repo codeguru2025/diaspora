@@ -4,10 +4,10 @@ import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/primitives";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { pricingModelLabels, type ServiceItem } from "@/config/services";
-import { SERVICE_PHOTOS } from "@/lib/service-photos";
+import { servicePhoto } from "@/lib/service-photos";
 
 export function ServiceCard({ service }: { service: ServiceItem }) {
-  const photo = SERVICE_PHOTOS[service.slug];
+  const photo = servicePhoto(service.slug);
   return (
     <Link
       href={`/services/${service.slug}`}

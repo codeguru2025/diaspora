@@ -3,9 +3,17 @@ import { ArrowRight, Phone, MessageCircle, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
-import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { cta, site } from "@/config/site";
-import { howItWorks, dfsDifference, nameItShowcase, diasporaPoints, trustMarkers } from "@/config/content";
+import {
+  howItWorks,
+  dfsDifference,
+  nameItShowcase,
+  diasporaPoints,
+  trustMarkers,
+  testimonials,
+  familyStories,
+} from "@/config/content";
 
 /* -------------------------------------------------------------- */
 export function CtaBand({
@@ -191,7 +199,6 @@ export function DiasporaSection() {
 /* -------------------------------------------------------------- */
 export function TrustStrip() {
   const shown = trustMarkers.filter((m) => !m.needsInput);
-  const pending = trustMarkers.filter((m) => m.needsInput);
   return (
     <Section tone="ivory">
       <SectionHeading eyebrow="Why families trust us" title="Professional. Transparent. Accountable." />
@@ -203,18 +210,6 @@ export function TrustStrip() {
           </div>
         ))}
       </div>
-      {pending.length > 0 && (
-        <p className="mt-4 text-xs text-mist">
-          Additional trust markers pending real figures from DFS:{" "}
-          {pending.map((p, i) => (
-            <span key={p.label}>
-              {i > 0 && ", "}
-              <NeedsInput>{p.label}</NeedsInput>
-            </span>
-          ))}
-          . We do not publish statistics, testimonials or accreditations until DFS confirms them.
-        </p>
-      )}
     </Section>
   );
 }
@@ -262,5 +257,82 @@ export function SmallLinkRow({ links }: { links: { label: string; href: string }
         </Link>
       ))}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------- */
+/** Real, consented testimonials only. Renders nothing until there is one. */
+export function TestimonialsSection() {
+  const shown = testimonials.filter((t) => t.consentDate);
+  if (shown.length === 0) return null;
+  return (
+    <Section tone="ivory">
+      <SectionHeading eyebrow="In their words" title="What families say about DFS." />
+      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {shown.map((t) => (
+          <figure key={`${t.name}-${t.consentDate}`} className="dfs-card flex flex-col rounded-[4px] p-6">
+            {t.rating && (
+              <p aria-label={`${t.rating} out of 5`} className="text-champagne">
+                {"★".repeat(t.rating)}
+                <span className="text-mist">{"★".repeat(5 - t.rating)}</span>
+              </p>
+            )}
+            <blockquote className="mt-3 flex-1 text-[0.98rem] leading-relaxed text-charcoal">
+              &ldquo;{t.quote}&rdquo;
+            </blockquote>
+            <figcaption className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-stone">
+              {t.name} · {t.location}
+              <span className="mt-1 block font-normal normal-case tracking-normal text-mist">{t.service}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <p className="mt-6 text-sm text-stone">
+        Has DFS cared for your family?{" "}
+        <Link href="/share-your-story" className="text-champagne-deep underline">
+          Share your story
+        </Link>
+        .
+      </p>
+    </Section>
+  );
+}
+
+/* -------------------------------------------------------------- */
+/** Composite scenarios, always labelled as illustrative — never presented as testimonials. */
+export function FamilyStoriesSection({ tone = "cream" }: { tone?: "cream" | "ivory" | "surface" }) {
+  return (
+    <Section tone={tone}>
+      <SectionHeading
+        eyebrow="How it works in real life"
+        title="What DFS does when a family needs us."
+        intro="Three typical situations, and how we handle them. These are illustrative examples based on the situations families bring to us — not quotes from real customers."
+      />
+      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        {familyStories.map((s) => (
+          <article key={s.title} className="dfs-card flex flex-col rounded-[4px] p-6">
+            <Badge tone="outline">Illustrative example</Badge>
+            <h3 className="mt-4 text-xl leading-snug">{s.title}</h3>
+            <p className="mt-1 text-sm text-mist">{s.setting}</p>
+            <p className="mt-4 text-sm leading-relaxed text-stone">{s.challenge}</p>
+            <p className="mt-3 flex-1 text-sm leading-relaxed text-charcoal">{s.howWeHelped}</p>
+            <ul className="mt-5 flex flex-wrap gap-1.5">
+              {s.services.map((svc) => (
+                <li key={svc} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-stone">
+                  {svc}
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+      <p className="mt-6 text-sm text-stone">
+        Has DFS cared for your family?{" "}
+        <Link href="/share-your-story" className="text-champagne-deep underline">
+          Share your story
+        </Link>{" "}
+        — with your permission, it may help another family decide.
+      </p>
+    </Section>
   );
 }

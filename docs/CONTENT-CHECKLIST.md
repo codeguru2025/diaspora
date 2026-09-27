@@ -10,10 +10,11 @@ in this list has been invented — the code shows placeholders (`CONFIGURE` /
 - [ ] General phone number + care-line (at-need) number
 - [ ] WhatsApp number / click-to-chat link
 - [ ] General email + at-need email
-- [ ] Office address and hours
+- [x] Office address — 312 Mership House, Bulawayo
 - [x] Facebook, Instagram, YouTube — `@diasporafuneralservice`
-- [ ] LinkedIn company page URL (separate slug from the handle above)
-- [ ] Legal entity name + regulatory / licensing line for the footer
+- [x] LinkedIn — none for now (removed from the footer)
+- [x] Legal entity — Thobela Diaspora Logistics
+- [ ] Regulatory / licensing line for the footer (omitted while `null`)
 
 ## 2. Packages (`src/config/packages.ts` + POL263)
 
@@ -33,10 +34,11 @@ in this list has been invented — the code shows placeholders (`CONFIGURE` /
 - [ ] Confirm pricing model per service (one-time / per-person / per-unit /
       per-service / monthly-premium / custom-quote / …)
 - [ ] Confirm package availability per service (included / add-on / not available)
-- [ ] Real lead times per service
+- [x] Interim: general timing guidance per service (no invented day counts) — replace with real lead times
 - [ ] Supplier / fulfilment partner per service (internal)
 - [ ] Location availability where relevant (e.g. livestreaming connectivity)
-- [ ] Real imagery for each service and category
+- [x] Interim: Unsplash stock photo for every service without a real one (`STOCK_SERVICE_PHOTOS` in `src/lib/stock-photos.ts`)
+- [ ] Replace with real DFS imagery per service
 - [ ] Add / remove services as the real catalogue dictates
 - [ ] Confirm curated bundles (`src/config/bundles.ts`) and any bundle discount
 
@@ -46,34 +48,33 @@ in this list has been invented — the code shows placeholders (`CONFIGURE` /
 
 ## 5. FAQ (`src/config/faqs.ts`)
 
-- [ ] Every answer marked `needsInput` — all policy-rule questions:
-      waiting periods, eligibility & age limits, missed payments, documents for a
-      claim, funeral turnaround time, will validity, cancellation, upgrade/downgrade,
-      support hours, max family members
+- [x] Policy answers written from the live POL263 product rules (ages 18–70, children to 20,
+      90-day waiting period, accidental from day one, 30-day grace, 2 adults + 4 children)
+- [ ] DFS review of FAQ wording; update if POL263 rules change
 
 ## 6. Resources (`src/config/resources.ts`)
 
-- [ ] Full article bodies for all 9 guides (outlines are provided)
-- [ ] `updated` dates
+- [x] Full article bodies for all 9 guides (`src/config/resource-articles.ts`)
+- [ ] DFS review of article content
 
 ## 7. Testimonials (`src/config/content.ts`)
 
-- [ ] Real, signed-off customer quotes (name, location, service, quote, optional
-      photo). The array is **empty** — none are fabricated. `PLACEHOLDER_TESTIMONIALS`
-      is dev-only and must never ship.
+- [x] Collection: /share-your-story form (lands in POL263 as a `testimonial` lead, with
+      consent-to-publish and name preference)
+- [ ] Add each approved quote to `testimonials` with its `consentDate` — the homepage section
+      appears automatically once there is one. Only real customers' words, approved by them.
+- [x] Illustrative "how it works" stories (`familyStories`), always labelled as examples
 
 ## 8. Trust markers (`src/config/content.ts` → `trustMarkers`)
 
-- [ ] "Families served" figure (or drop the marker)
-- [ ] "Years of service" figure (or drop the marker)
+- [x] "Families served" — 24 (update as it grows, `src/config/content.ts`)
+- [x] "Years of service" — intentionally not displayed while DFS is new
 - [ ] Any accreditations / partnerships / licences (only if real)
 
 ## 9. Legal (`src/app/legal/*`)
 
-- [ ] Terms & Conditions — full wording (legal review)
-- [ ] Privacy Policy — full wording (legal review)
-- [ ] Cookie Policy — once an analytics provider is chosen
-- [ ] Policy Information — plain-language + link to signed policy docs
+- [x] Terms, Privacy, Cookie and Policy Information — full working drafts written
+- [ ] Legal review of all four documents before relying on them
 - [ ] Will-writing disclaimer wording
 - [ ] Grief-support disclaimer wording
 

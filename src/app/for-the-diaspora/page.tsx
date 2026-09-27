@@ -72,8 +72,8 @@ export default function DiasporaPage() {
               ))}
             </ul>
             <p className="mt-4 text-xs text-mist">
-              Communication is delivered through the POL263 platform. Message content and timing are
-              configured with DFS.
+              Updates arrive by SMS and in your customer portal, so you can follow along from any time
+              zone.
             </p>
           </div>
 

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/ui/section";
-import { Badge, NeedsInput } from "@/components/ui/primitives";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { Badge } from "@/components/ui/primitives";
+import { TRIBUTE_SAMPLE_PHOTO } from "@/lib/stock-photos";
+import Image from "next/image";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { getSampleTribute } from "@/config/tribute-sample";
@@ -41,11 +42,17 @@ export default async function TributePage({
 
       <Section tone="ivory">
         <div className="mx-auto max-w-2xl">
-          <ImagePlaceholder
-            direction={tribute.photoCaption}
-            aspect="aspect-[16/9]"
-            className="w-full rounded-2xl border border-line"
-          />
+          <figure>
+            <Image
+              src={TRIBUTE_SAMPLE_PHOTO.src}
+              alt={tribute.photoCaption}
+              width={TRIBUTE_SAMPLE_PHOTO.width}
+              height={TRIBUTE_SAMPLE_PHOTO.height}
+              priority
+              className="aspect-[16/9] w-full rounded-2xl border border-line object-cover"
+            />
+            <figcaption className="mt-2 text-xs text-mist">{tribute.photoCaption}</figcaption>
+          </figure>
 
           <p className="mt-6 text-lg leading-relaxed text-stone">{tribute.summary}</p>
 
@@ -58,7 +65,7 @@ export default async function TributePage({
                     {row.label}
                   </dt>
                   <dd className="text-right text-ink">
-                    <NeedsInput>{row.detail}</NeedsInput>
+                    {row.detail}
                   </dd>
                 </div>
               ))}
@@ -95,10 +102,8 @@ export default async function TributePage({
                 </Button>
               </fieldset>
               <p className="mt-4 text-xs text-mist">
-                <NeedsInput>
-                  Posting is disabled on this sample. A real tribute wall needs shared, moderated
-                  storage — see docs/POL263-TRIBUTE-SCHEMA.md — which is not yet connected.
-                </NeedsInput>
+                Posting is disabled on this sample page. On a family’s live tribute page, guests can
+                leave messages here, reviewed by the family before they appear.
               </p>
             </form>
           </div>

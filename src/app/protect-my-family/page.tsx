@@ -4,7 +4,6 @@ import { Section, SectionHeading } from "@/components/ui/section";
 import { PackageGrid } from "@/components/marketing/package-grid";
 import { Steps, TrustStrip } from "@/components/marketing/sections";
 import { Button } from "@/components/ui/button";
-import { NeedsInput } from "@/components/ui/primitives";
 import { cta } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -76,12 +75,10 @@ export default async function ProtectMyFamilyPage({
             ))}
           </ol>
           <p className="mt-4 text-xs text-mist">
-            Account creation, policy issuance, beneficiaries, premiums and payment are handled by
-            POL263. Waiting periods, eligibility and policy terms are{" "}
-            <NeedsInput>configured in POL263 and confirmed by DFS</NeedsInput>. When the DFS tenant
-            is connected, the application creates your policy and account directly and premiums are
-            paid online via PayNow; until then it is captured for a Funeral Care Consultant to
-            complete with you.
+            Your application creates your policy and your customer account, and premiums are paid
+            online. Adults join at 18–70 and children are covered up to age 20. Cover for death from
+            natural causes starts after a 90-day waiting period; accidental death is covered from
+            day one. Your policy documents set out the full terms.
           </p>
         </div>
       </Section>

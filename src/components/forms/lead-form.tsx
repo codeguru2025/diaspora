@@ -11,7 +11,8 @@ import type { LeadInput } from "@/lib/pol263";
 type ExtraField =
   | { name: string; label: string; type: "text" | "tel" | "email"; required?: boolean; placeholder?: string }
   | { name: string; label: string; type: "textarea"; required?: boolean; placeholder?: string }
-  | { name: string; label: string; type: "select"; required?: boolean; options: string[] };
+  | { name: string; label: string; type: "select"; required?: boolean; options: string[] }
+  | { name: string; label: string; type: "checkbox"; required?: boolean };
 
 export function LeadForm({
   source,
@@ -20,6 +21,9 @@ export function LeadForm({
   submitLabel = "Send",
   extraFields = [],
   contactKind,
+  successTitle = "Thank you — we have your details.",
+  successBody = "A member of our team will be in touch. If this is urgent, please call our care line.",
+  showMessageField = true,
 }: {
   source: LeadInput["source"];
   title?: string;
@@ -27,6 +31,10 @@ export function LeadForm({
   submitLabel?: string;
   extraFields?: ExtraField[];
   contactKind?: "callback" | "message" | "bespoke";
+  successTitle?: string;
+  successBody?: string;
+  /** Show the generic "Anything you'd like us to know?" box when no extra field is named "message". */
+  showMessageField?: boolean;
 }) {
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [error, setError] = useState("");
@@ -45,7 +53,10 @@ export function LeadForm({
       source,
       message: String(fd.get("message") || "") || undefined,
       context: Object.fromEntries(
-        extraFields.map((f) => [f.name, String(fd.get(f.name) || "")]).filter(([, v]) => v),
+        extraFields
+          .filter((f) => f.name !== "message")
+          .map((f) => [f.name, f.type === "checkbox" ? (fd.get(f.name) ? "Yes" : "No") : String(fd.get(f.name) || "")])
+          .filter(([, v]) => v),
       ),
       turnstileToken,
     };
@@ -72,10 +83,8 @@ export function LeadForm({
     return (
       <div className="rounded-2xl border border-sage/30 bg-sage/8 p-6">
         <CheckCircle2 className="size-6 text-sage" />
-        <h3 className="mt-3 text-lg">Thank you — we have your details.</h3>
-        <p className="mt-1 text-sm text-stone">
-          A member of our team will be in touch. If this is urgent, please call our care line.
-        </p>
+        <h3 className="mt-3 text-lg">{successTitle}</h3>
+        <p className="mt-1 text-sm text-stone">{successBody}</p>
       </div>
     );
   }
@@ -99,7 +108,18 @@ export function LeadForm({
           <TextInput name="email" type="email" autoComplete="email" />
         </Field>
 
-        {extraFields.map((f) => (
+        {extraFields.map((f) =>
+          f.type === "checkbox" ? (
+            <label key={f.name} className="flex items-start gap-3 text-sm text-charcoal sm:col-span-2">
+              <input
+                type="checkbox"
+                name={f.name}
+                required={f.required}
+                className="mt-1 size-4 shrink-0 accent-[var(--color-champagne)]"
+              />
+              <span>{f.label}</span>
+            </label>
+          ) : (
           <Field
             key={f.name}
             label={f.label}
@@ -123,9 +143,10 @@ export function LeadForm({
               <TextInput name={f.name} type={f.type} required={f.required} placeholder={f.placeholder} />
             )}
           </Field>
-        ))}
+          ),
+        )}
 
-        {!extraFields.some((f) => f.name === "message") && (
+        {showMessageField && !extraFields.some((f) => f.name === "message") && (
           <Field label="Anything you'd like us to know?" className="sm:col-span-2">
             <TextArea name="message" placeholder="Optional" />
           </Field>

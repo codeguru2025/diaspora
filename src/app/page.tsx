@@ -12,6 +12,8 @@ import {
   DiasporaSection,
   TrustStrip,
   ConciergeSection,
+  TestimonialsSection,
+  FamilyStoriesSection,
 } from "@/components/marketing/sections";
 import { ServiceCard } from "@/components/marketing/service-card";
 import { getService } from "@/config/services";
@@ -85,6 +87,10 @@ export default function HomePage() {
       <ConciergeSection />
 
       <TrustStrip />
+
+      <TestimonialsSection />
+
+      <FamilyStoriesSection tone="surface" />
 
       <CtaBand />
 

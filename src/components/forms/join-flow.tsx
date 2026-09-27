@@ -6,7 +6,7 @@ import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Field, TextInput, Select } from "@/components/ui/field";
-import { Badge, NeedsInput } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { track } from "@/lib/analytics";
 import { packages } from "@/config/packages";
@@ -436,8 +436,8 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
             </Button>
           </div>
           <p className="mt-3 text-xs text-mist">
-            The maximum number of members and their eligible ages are{" "}
-            <NeedsInput>configured in POL263</NeedsInput>.
+            Adults must be 18–70 when they join and children are covered up to age 20. A policy
+            covers up to 2 adults and 4 children.
           </p>
         </div>
       )}
@@ -563,8 +563,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
               </p>
             ) : (
               <p className="mt-1 text-lg">
-                Confirmed by a consultant —{" "}
-                <NeedsInput>DFS pricing engine not yet connected</NeedsInput>
+                Confirmed by a Funeral Care Consultant
               </p>
             )}
             <p className="mt-2 text-xs text-ivory/60">
