@@ -444,7 +444,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
             </Button>
           </div>
           <p className="mt-3 text-xs text-mist">
-            Adults must be 18–70 when they join and children are covered up to age 20. A policy
+            Adults must be 18–70 when they join and children are covered until they turn 20. A policy
             covers up to 2 adults and 4 children.
           </p>
         </div>

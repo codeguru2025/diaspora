@@ -29,7 +29,7 @@ export const faqCategories: FaqCategory[] = [
     title: "Eligibility",
     items: [
       { q: "Who can be covered on a DFS policy?", a: "The main member (the person taking out the policy), their spouse or partner, and their children. The main member does not have to live in Zimbabwe — many families cover relatives back home from abroad." },
-      { q: "Is there an age limit to join or to add a family member?", a: "The main member and any adult on the policy must be between 18 and 70 when they join. Children can be covered up to age 20." },
+      { q: "Is there an age limit to join or to add a family member?", a: "The main member and any adult on the policy must be between 18 and 70 when they join. Children can be covered until they turn 20." },
       { q: "Can I cover extended family members?", a: "Not on the current packages, which cover you, your spouse or partner and your children. If you want to protect parents or other relatives, speak to a Funeral Care Consultant about a separate policy for them." },
     ],
   },

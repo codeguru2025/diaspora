@@ -76,7 +76,7 @@ export default async function ProtectMyFamilyPage({
           </ol>
           <p className="mt-4 text-xs text-mist">
             Your application creates your policy and your customer account, and premiums are paid
-            online. Adults join at 18–70 and children are covered up to age 20. Cover for death from
+            online. Adults join at 18–70 and children are covered until they turn 20. Cover for death from
             natural causes starts after a 90-day waiting period; accidental death is covered from
             day one. Your policy documents set out the full terms.
           </p>

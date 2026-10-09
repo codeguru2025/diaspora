@@ -26,7 +26,7 @@ export default function PolicyInformationPage() {
         {
           heading: "Who can be covered",
           paragraphs: [
-            "A policy covers the main member, their spouse or partner, and their children: up to 2 adults and up to 4 children. Adults must be aged 18 to 70 when they join. Children are covered up to age 20. Extended family members are not covered on the current packages.",
+            "A policy covers the main member, their spouse or partner, and their children: up to 2 adults and up to 4 children. Adults must be aged 18 to 70 when they join. Children are covered until they turn 20. Extended family members are not covered on the current packages.",
           ],
         },
         {

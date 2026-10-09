@@ -173,7 +173,7 @@ export const resourceArticles: Record<string, ArticleSection[]> = {
       heading: "Questions to ask any funeral cover provider",
       paragraphs: [
         "How long is the waiting period, and does it apply to accidental death? Who can be covered, and up to what age? What happens if a payment is missed? What documents are needed at the time of a claim? Who actually arranges the funeral, and how will you be kept informed?",
-        "At DFS, cover for natural causes starts after a 90-day waiting period and accidental death is covered from day one. There is a 30-day grace period for missed premiums. Adults join at 18–70 and children are covered up to age 20.",
+        "At DFS, cover for natural causes starts after a 90-day waiting period and accidental death is covered from day one. There is a 30-day grace period for missed premiums. Adults join at 18–70 and children are covered until they turn 20.",
       ],
     },
     {

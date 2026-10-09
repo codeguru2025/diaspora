@@ -31,7 +31,7 @@ export default function TermsPage() {
             "In summary, and subject to your policy documents:",
           ],
           list: [
-            "The main member and any adult on the policy must be aged 18 to 70 when they join. Children are covered up to age 20.",
+            "The main member and any adult on the policy must be aged 18 to 70 when they join. Children are covered until they turn 20.",
             "A policy covers up to 2 adults and up to 4 children.",
             "Cover for death from natural causes starts after a 90-day waiting period. Accidental death is covered from the start of cover.",
             "You have a 30-day grace period for a missed premium. If it remains unpaid, the policy lapses. Reinstatement requires payment of arrears, and a new waiting period applies.",

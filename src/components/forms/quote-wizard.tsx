@@ -33,7 +33,9 @@ type QuoteEstimate = {
 /** Everyone else on the policy: who they are to the main member, and their date of birth. */
 type Person = { relationship: string; dateOfBirth: string };
 const RELATIONSHIPS = ["Spouse", "Child", "Parent", "Sibling", "Grandparent", "Grandchild", "Other"];
-const CHILD_MAX_AGE = 20; // DFS covers children up to 20 (product dependent_max_age)
+// A child is priced as a child until they turn 20; at 20 they are into their 21st year and priced as
+// an adult (Augustus, 2026-10-09) — same as POL263 ageBandKeyFor (age < 20 = child).
+const CHILD_MAX_AGE = 19;
 
 /** Whole years on today's date, or null for a missing/invalid date. */
 function ageOf(dob: string): number | null {
@@ -337,7 +339,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
                   </Field>
                   <Button type="button" variant="ghost" onClick={() => setOthers(others.filter((_, j) => j !== i))}>Remove</Button>
                   {age != null && p.relationship === "Child" && age > CHILD_MAX_AGE && (
-                    <p className="text-xs text-[#a9583c] sm:col-span-3">Children are covered up to age {CHILD_MAX_AGE} — this person would be priced as an adult.</p>
+                    <p className="text-xs text-[#a9583c] sm:col-span-3">Children are covered until they turn 20 — this person would be priced as an adult.</p>
                   )}
                 </div>
               );
@@ -347,7 +349,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
             </Button>
           </div>
           <p className="mt-3 text-xs text-mist">
-            Adults must be 18–70 when they join and children are covered up to age 20. A policy
+            Adults must be 18–70 when they join and children are covered until they turn 20. A policy
             covers up to 2 adults and 4 children.
           </p>
         </div>
