@@ -397,7 +397,96 @@ export type LeadInput = {
   context?: Record<string, unknown>;
   /** Cloudflare Turnstile response token — required on real write actions only. */
   turnstileToken?: string;
+  /**
+   * A priced quote (see buildLeadQuote). With it, POL263 saves the quote against the lead and emails
+   * the visitor the quote PDF when they gave an email address.
+   */
+  quote?: LeadQuote;
 };
+
+export type LeadQuote = {
+  policyholderName: string;
+  policyholderDateOfBirth: string;
+  dependents: { firstName: string; lastName: string; dateOfBirth: string }[];
+  recommended: {
+    productId?: string;
+    productVersionId: string;
+    productName: string;
+    premium: string | null;
+    currency: string;
+    paymentSchedule: string;
+  };
+  benefits: { name: string; detail?: string }[];
+};
+
+/**
+ * Price a "Get a quote" request in POL263 (each person at their age, chosen services with their
+ * option and quantity) and shape it as the quote POL263 stores and emails. Priced here on the
+ * server, never trusted from the browser. Undefined when the package or date of birth is missing.
+ */
+export async function buildLeadQuote(input: {
+  firstName: string;
+  lastName: string;
+  packageSlug?: string | null;
+  policyholderDateOfBirth?: string | null;
+  family?: { relationship?: string; dateOfBirth?: string }[];
+  serviceSlugs?: string[];
+  serviceChoices?: ServiceChoice[];
+  currency?: string;
+}): Promise<LeadQuote | undefined> {
+  const isoDob = (v?: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  const holderDob = isoDob(input.policyholderDateOfBirth);
+  const pkg = localPackages.find((p) => p.slug === input.packageSlug);
+  if (!holderDob || !pkg?.pol263ProductCode) return undefined;
+  const opts = await getRegistrationOptions();
+  const product = opts.data.products.find((p) => p.code === pkg.pol263ProductCode);
+  const productVersionId = product?.versions?.[0]?.id;
+  if (!product || !productVersionId) return undefined;
+
+  const family = (input.family ?? []).slice(0, 20);
+  const serviceSlugs = input.serviceSlugs ?? [];
+  const choices = input.serviceChoices ?? [];
+  const { memberAddOns } = await benefitsForEveryone(serviceSlugs, family.length, choices);
+  const currency = input.currency ?? "USD";
+  const priced = await getQuote({
+    productVersionId,
+    policyholderDateOfBirth: holderDob,
+    dependentDateOfBirths: family.map((f) => isoDob(f.dateOfBirth)),
+    memberAddOns: memberAddOns.length ? memberAddOns : undefined,
+    currency,
+  });
+
+  // "Catering — Modern menu × 200 guests", as the visitor chose it.
+  const catalogue = await getServiceCatalogue();
+  const benefits = serviceSlugs.flatMap((slug) => {
+    const svc = catalogue.data.find((s) => s.slug === slug);
+    if (!svc) return [];
+    const picked = choices.filter((c) => c.slug === slug);
+    const lines = (picked.length ? picked : [{ slug } as ServiceChoice]).map((c) => {
+      const o = svc.options.find((x) => x.key === c.optionKey) ?? svc.options[0];
+      if (!o) return svc.pol263AddOnId && svc.cashValue ? undefined : "price to be confirmed";
+      const qty = o.unit ? Math.max(o.minQty ?? 1, c.quantity ?? o.defaultQty ?? 1) : null;
+      return qty ? `${o.label} × ${qty} ${o.unit}s` : o.label;
+    });
+    return lines.map((detail) => ({ name: svc.name, ...(detail ? { detail } : {}) }));
+  });
+
+  return {
+    policyholderName: `${input.firstName} ${input.lastName}`.trim(),
+    policyholderDateOfBirth: holderDob,
+    // The quote form asks how each person is related, not their name.
+    dependents: family.map((f) => ({ firstName: f.relationship || "Family member", lastName: "", dateOfBirth: isoDob(f.dateOfBirth) ?? "" })),
+    recommended: {
+      productId: product.id,
+      productVersionId,
+      productName: product.name,
+      premium: priced.source === "pol263" ? priced.data.premium : null,
+      currency: priced.data.currency || currency,
+      paymentSchedule: priced.data.paymentSchedule || "monthly",
+    },
+    benefits,
+  };
+}
 
 /**
  * The quote-lead endpoint has no structured fields for the enquiry itself, so the
@@ -471,6 +560,8 @@ export async function createLead(
           message: leadNote(input),
           org: ORG_ID,
           turnstileToken: input.turnstileToken,
+          // POL263 saves it and emails the quote PDF (when an email address was given).
+          ...(input.quote ? { quote: input.quote } : {}),
         }),
       },
     );

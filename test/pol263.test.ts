@@ -209,3 +209,49 @@ describe("leadNote", () => {
     expect(mod.leadNote({ context: { a: undefined, b: [], c: "" } })).toBeUndefined();
   });
 });
+
+describe("buildLeadQuote", () => {
+  it("prices the visitor's quote in POL263 and lists the benefits as chosen", async () => {
+    const { mod } = await load([]);
+    const quoteBodies: Record<string, unknown>[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      const json = (b: unknown) => new Response(JSON.stringify(b), { status: 200, headers: { "content-type": "application/json" } });
+      if (url.includes("/registration-options")) {
+        return json({
+          products: [{ id: "p-classic", code: "CLASSIC", name: "Classic", versions: [{ id: "pv-1", version: 1 }] }],
+          addOns: [{ id: "ao-cat", name: "Catering", cashValue: "600.00", options: [
+            { key: "modern", label: "Modern menu", unitPrice: "6.00", unit: "guest", minQty: 50, defaultQty: 150 },
+          ] }],
+        });
+      }
+      if (url.includes("/api/public/quote")) {
+        quoteBodies.push(JSON.parse(String(init?.body)));
+        return json({ premium: "19.98", currency: "USD", paymentSchedule: "monthly" });
+      }
+      return new Response("{}", { status: 404 });
+    }));
+    const q = await mod.buildLeadQuote({
+      firstName: "Tariro", lastName: "Moyo", packageSlug: "classic", policyholderDateOfBirth: "1986-01-01",
+      family: [{ relationship: "Child", dateOfBirth: "2018-01-01" }],
+      serviceSlugs: ["catering"], serviceChoices: [{ slug: "catering", optionKey: "modern", quantity: 200 }],
+    });
+    expect(quoteBodies[0]).toMatchObject({
+      productVersionId: "pv-1", policyholderDateOfBirth: "1986-01-01", dependentDateOfBirths: ["2018-01-01"],
+      memberAddOns: [
+        { memberRef: "holder", addOnId: "ao-cat", optionKey: "modern", quantity: 200 },
+        { memberRef: "dependent:0", addOnId: "ao-cat", optionKey: "modern", quantity: 200 },
+      ],
+    });
+    expect(q).toMatchObject({
+      policyholderName: "Tariro Moyo",
+      dependents: [{ firstName: "Child", lastName: "", dateOfBirth: "2018-01-01" }],
+      recommended: { productId: "p-classic", productVersionId: "pv-1", productName: "Classic", premium: "19.98" },
+      benefits: [{ name: "Catering", detail: "Modern menu × 200 guests" }],
+    });
+  });
+
+  it("gives nothing without a package or a date of birth", async () => {
+    const { mod } = await load([]);
+    expect(await mod.buildLeadQuote({ firstName: "A", lastName: "B", packageSlug: "classic" })).toBeUndefined();
+  });
+});
