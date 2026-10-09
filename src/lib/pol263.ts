@@ -185,15 +185,36 @@ export async function getPackages(): Promise<Resolved<ResolvedPackage[]>> {
  * Service catalogue ← POL263 add_ons / price_book (extended model)   *
  * ------------------------------------------------------------------ */
 
+/**
+ * One choice within a benefit, as POL263 prices it (add_ons.options). A per-unit option (`unit` set:
+ * guest, copy, night, day…) is bought by quantity — at least `minQty`, usually `defaultQty`; the
+ * benefit's value is unitPrice × quantity. Without a unit it is a single item.
+ */
+export type ServiceOption = {
+  key: string;
+  label: string;
+  unitPrice: string;
+  unit?: string | null;
+  minQty?: number | null;
+  defaultQty?: number | null;
+};
+
+/** The option chosen for a chosen service, and how many. Omitted = the first option, usual quantity. */
+export type ServiceChoice = { slug: string; optionKey?: string; quantity?: number };
+
 export type ResolvedService = (typeof localServices)[number] & {
   /** Join key to POL263 `add_ons.id` — null until matched by exact name. */
   pol263AddOnId: string | null;
   /** Real cash value from POL263, or null when not priced yet ("price TBC"). */
   cashValue: string | null;
+  /** The choices POL263 prices this benefit by (empty = the single cashValue). */
+  options: ServiceOption[];
+  /** POL263 product codes whose package already includes this benefit free. */
+  includedProductCodes: string[];
 };
 
 export async function getServiceCatalogue(): Promise<Resolved<ResolvedService[]>> {
-  const fallback: ResolvedService[] = localServices.map((s) => ({ ...s, pol263AddOnId: null, cashValue: null }));
+  const fallback: ResolvedService[] = localServices.map((s) => ({ ...s, pol263AddOnId: null, cashValue: null, options: [], includedProductCodes: [] }));
   if (!REF) return { data: fallback, source: "fallback" };
 
   // The local catalogue stays authoritative for presentation (category copy, includes,
@@ -208,7 +229,13 @@ export async function getServiceCatalogue(): Promise<Resolved<ResolvedService[]>
   const resolved = localServices.map<ResolvedService>((s) => {
     const match = byName.get(s.name);
     const cashValue = match?.cashValue && Number(match.cashValue) > 0 ? match.cashValue : null;
-    return { ...s, pol263AddOnId: match?.id ?? null, cashValue };
+    return {
+      ...s,
+      pol263AddOnId: match?.id ?? null,
+      cashValue,
+      options: Array.isArray(match?.options) ? match.options : [],
+      includedProductCodes: Array.isArray(match?.includedProductCodes) ? match.includedProductCodes : [],
+    };
   });
   return { data: resolved, source: "pol263" };
 }
@@ -223,8 +250,19 @@ export type QuoteRequest = {
   memberCount?: number;
   dependentDateOfBirths?: (string | null)[];
   addOnIds?: string[];
+  /** Benefits per person: "holder" or "dependent:<index>" (see benefitsForEveryone). */
+  memberAddOns?: MemberAddOn[];
   currency?: string;
   paymentSchedule?: string;
+};
+
+/** One covered person's share of the premium, as POL263 priced it. */
+export type QuoteBreakdownLine = {
+  role: "policy_holder" | "dependent";
+  age: number | null;
+  ageBand: string;
+  coverAmount: string;
+  premium: string;
 };
 
 export type QuoteResponse = {
@@ -234,7 +272,53 @@ export type QuoteResponse = {
   estimate: boolean;
   note?: string;
   productVersionId?: string;
+  breakdown?: QuoteBreakdownLine[];
 };
+
+/**
+ * The chosen services as POL263 benefits for EVERY covered person (Augustus, 9 Oct 2026: a benefit
+ * covers each person's funeral, so it is added to each person's cover and priced at their own age).
+ * Each service goes once per option chosen for it (`choices`, e.g. a grave tent and 100 chairs) with
+ * its quantity; a service with no choice given goes once with POL263's default (first option, usual
+ * quantity). Services with no POL263 add-on, or whose add-on has no value yet, are returned in
+ * `unpriced` so the visitor is told rather than shown a premium that silently leaves them out.
+ */
+export type MemberAddOn = { memberRef: string; addOnId: string; optionKey?: string; quantity?: number };
+
+export async function benefitsForEveryone(
+  serviceSlugs: string[],
+  dependentCount: number,
+  choices: ServiceChoice[] = [],
+): Promise<{ memberAddOns: MemberAddOn[]; unpriced: string[] }> {
+  if (!serviceSlugs.length) return { memberAddOns: [], unpriced: [] };
+  const catalogue = await getServiceCatalogue();
+  const refs = ["holder", ...Array.from({ length: dependentCount }, (_, i) => `dependent:${i}`)];
+  const memberAddOns: MemberAddOn[] = [];
+  const unpriced: string[] = [];
+  for (const slug of serviceSlugs) {
+    const svc = catalogue.data.find((x) => x.slug === slug);
+    if (!svc) continue;
+    if (!svc.pol263AddOnId || (!svc.cashValue && svc.options.length === 0)) unpriced.push(svc.name);
+    if (!svc.pol263AddOnId) continue;
+    // Only options this benefit really has, each once (POL263 refuses the same option twice).
+    const seen = new Set<string>();
+    const picked = choices
+      .filter((c) => c.slug === slug && (!c.optionKey || svc.options.some((o) => o.key === c.optionKey)))
+      .filter((c) => { const k = c.optionKey ?? ""; if (seen.has(k)) return false; seen.add(k); return true; });
+    const lines = picked.length ? picked : [{ slug } as ServiceChoice];
+    for (const memberRef of refs) {
+      for (const c of lines) {
+        memberAddOns.push({
+          memberRef,
+          addOnId: svc.pol263AddOnId,
+          ...(c.optionKey ? { optionKey: c.optionKey } : {}),
+          ...(c.quantity ? { quantity: c.quantity } : {}),
+        });
+      }
+    }
+  }
+  return { memberAddOns, unpriced };
+}
 
 /**
  * Join key: DFS package slug → POL263 `products.code` (`pol263ProductCode` in
@@ -268,7 +352,7 @@ export async function getQuote(
   };
   if (!REF) return { data: fallback, source: "fallback" };
 
-  const r = await call<{ premium: string; currency: string; paymentSchedule: string }>(
+  const r = await call<{ premium: string; currency: string; paymentSchedule: string; breakdown?: QuoteBreakdownLine[] }>(
     `/api/public/quote`,
     { method: "POST", body: JSON.stringify({ refCode: REF, org: ORG_ID, ...req }), revalidate: opts?.revalidate },
   );
@@ -281,6 +365,7 @@ export async function getQuote(
       paymentSchedule: r.data.paymentSchedule,
       estimate: true,
       productVersionId: req.productVersionId,
+      breakdown: r.data.breakdown,
       note: "Indicative premium from the DFS pricing engine. Confirmed at application.",
     },
   };
@@ -422,6 +507,10 @@ export type RegistrationOptionsAddOn = {
   pricingMode: string;
   /** Raw cash value from POL263 (`add_ons.coverIncrementAmount`) — null/0 means not priced yet. */
   cashValue?: string | null;
+  /** How POL263 prices it — choices with a unit price, per-unit ones with a minimum/usual quantity. */
+  options?: ServiceOption[];
+  /** Product codes whose package already includes it free. */
+  includedProductCodes?: string[];
 };
 
 export type RegistrationOptions = {
@@ -491,6 +580,8 @@ export type RegisterPolicyInput = {
   beneficiary?: { firstName: string; lastName: string; relationship: string; nationalId: string; phone: string };
   serviceProvince?: string;
   selectedServices?: string[];
+  /** The option and quantity chosen for each selected service (see benefitsForEveryone). */
+  serviceChoices?: ServiceChoice[];
   consentedAt?: string;
   /** Cloudflare Turnstile response token — required on real write actions only. */
   turnstileToken?: string;
@@ -518,6 +609,11 @@ export async function registerPolicy(
   // add-on services / diaspora context ride along as a lead so nothing is lost.
   const attemptedRegistration = Boolean(BASE && REF && input.productVersionId);
   if (REF && input.productVersionId) {
+    const { memberAddOns } = await benefitsForEveryone(
+      input.selectedServices ?? [],
+      (input.dependents ?? []).length,
+      input.serviceChoices ?? [],
+    );
     const r = await call<{
       policyNumber: string;
       activationCode: string;
@@ -541,6 +637,7 @@ export async function registerPolicy(
           currency: input.currency ?? "USD",
           paymentSchedule: input.paymentSchedule ?? "monthly",
           dependents: input.dependents ?? [],
+          memberAddOns,
           beneficiary: input.beneficiary,
           consentedAt: input.consentedAt ?? new Date().toISOString(),
           turnstileToken: input.turnstileToken,
@@ -559,11 +656,11 @@ export async function registerPolicy(
       };
     }
     if (r.ok) {
-      // register-policy has no field for the personalisation choices, and the visitor's
-      // Turnstile token is spent, so a follow-up POL263 lead would be rejected. Record
-      // them against the policy number for the DFS team instead.
+      // The chosen services went to POL263 as benefits (memberAddOns above). The service
+      // province and country have no field there, and the visitor's Turnstile token is spent,
+      // so record those against the policy number for the DFS team.
       if (input.selectedServices?.length || input.serviceProvince || input.countryOfResidence) {
-        console.info("[pol263] registration personalisation (not stored in POL263):", {
+        console.info("[pol263] registration context (province/country not stored in POL263):", {
           policyNumber: r.data.policyNumber,
           selectedServices: input.selectedServices,
           serviceProvince: input.serviceProvince,

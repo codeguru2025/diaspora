@@ -137,6 +137,7 @@ export const footerNav: { title: string; links: NavItem[] }[] = [
       { label: "Resources", href: "/resources" },
       { label: "FAQ", href: "/faq" },
       { label: "Gallery", href: "/gallery" },
+      { label: "Brochures", href: "/brochures" },
     ],
   },
   {

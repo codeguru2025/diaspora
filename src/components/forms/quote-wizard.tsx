@@ -12,13 +12,41 @@ import { packages } from "@/config/packages";
 import { services } from "@/config/services";
 import { diasporaCountries, zimbabweProvinces } from "@/config/content";
 import { pricingModelLabels } from "@/config/services";
-import { setPackage, toggleService, useSelection } from "@/lib/selection-store";
+import { flatChoices, setPackage, setServiceChoices, toggleService, useSelection } from "@/lib/selection-store";
+import { BenefitChoices, type BenefitOption } from "@/components/forms/benefit-choices";
 import { writeApplication } from "@/lib/application-store";
 import { encodeQuote } from "@/lib/quote-token";
 
 const STEPS = ["Package", "Family", "Location", "Personalise", "Review", "Your details"] as const;
 
-type QuoteEstimate = { premium: string | null; currency: string; paymentSchedule: string; note?: string };
+type BreakdownLine = { role: "policy_holder" | "dependent"; age: number | null; ageBand: string; coverAmount: string; premium: string };
+type QuoteEstimate = {
+  premium: string | null;
+  currency: string;
+  paymentSchedule: string;
+  note?: string;
+  breakdown?: BreakdownLine[];
+  /** Chosen services POL263 has no price for yet — the premium doesn't include them. */
+  unpricedServices?: string[];
+};
+
+/** Everyone else on the policy: who they are to the main member, and their date of birth. */
+type Person = { relationship: string; dateOfBirth: string };
+const RELATIONSHIPS = ["Spouse", "Child", "Parent", "Sibling", "Grandparent", "Grandchild", "Other"];
+const CHILD_MAX_AGE = 20; // DFS covers children up to 20 (product dependent_max_age)
+
+/** Whole years on today's date, or null for a missing/invalid date. */
+function ageOf(dob: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
+  const [y, m, d] = dob.split("-").map(Number);
+  const t = new Date();
+  let a = t.getFullYear() - y;
+  if (t.getMonth() + 1 < m || (t.getMonth() + 1 === m && t.getDate() < d)) a--;
+  return a >= 0 && a < 130 ? a : null;
+}
+const BAND_LABEL: Record<string, string> = { child: "child", "21_65": "21–65", "66_84": "66–84", "85_plus": "85+" };
+const money = (amount: string | number, currency: string) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(amount));
 
 export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
   const selection = useSelection();
@@ -30,9 +58,12 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
   const chosen = selection.serviceSlugs;
   const [residence, setResidence] = useState("ZW");
   const [province, setProvince] = useState("");
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [estimate, setEstimate] = useState<QuoteEstimate | null>(null);
+  const [holderDob, setHolderDob] = useState("");
+  const [others, setOthers] = useState<Person[]>([]);
+  // Counts for the saved-quote link and the lead note — from the ages entered.
+  const children = others.filter((p) => { const a = ageOf(p.dateOfBirth); return a != null && a <= CHILD_MAX_AGE; }).length;
+  const adults = 1 + others.length - children;
+  const [rawEstimate, setEstimate] = useState<QuoteEstimate | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [submit, setSubmit] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [submitError, setSubmitError] = useState("");
@@ -67,29 +98,60 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
     return [...set].map((s) => services.find((x) => x.slug === s)).filter(Boolean).slice(0, 4);
   }, [chosen]);
 
-  async function fetchEstimate() {
-    setEstimating(true);
-    try {
-      const res = await fetch("/api/quote", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          packageSlug: pkg,
-          memberCount: adults + children,
-          dependentDateOfBirths: Array(Math.max(0, adults + children - 1)).fill(null),
-          currency: residence === "ZW" ? "USD" : "USD",
-        }),
-      });
-      setEstimate(await res.json());
-    } catch {
-      setEstimate({ premium: null, currency: "USD", paymentSchedule: "monthly", note: "We'll confirm your premium directly." });
-    } finally {
-      setEstimating(false);
-    }
-  }
+  // Re-price live (debounced) whenever the package, anyone's date of birth or a chosen service
+  // changes. POL263 prices each person at their own age and adds every chosen benefit to each
+  // person's cover (it used to be asked once, with no ages and none of the chosen services).
+  const holderAge = ageOf(holderDob);
+  // Only show a premium for the current package and date of birth (never a stale one).
+  const estimate = pkg && holderAge != null ? rawEstimate : null;
+  const choices = flatChoices(selection, chosen);
+  const quoteKey = JSON.stringify([pkg, holderDob, others.map((p) => p.dateOfBirth), chosen, choices]);
+
+  // How each service is priced (its options and quantities, packages that include it), so the
+  // visitor picks e.g. a catering menu and the number of guests.
+  const [optionsBySlug, setOptionsBySlug] = useState<Record<string, { options: BenefitOption[]; includedProductCodes: string[] }>>({});
+  useEffect(() => {
+    fetch("/api/services/options")
+      .then((r) => r.json())
+      .then((d: { services?: { slug: string; options: BenefitOption[]; includedProductCodes: string[] }[] }) =>
+        setOptionsBySlug(Object.fromEntries((d.services ?? []).map((s) => [s.slug, s]))),
+      )
+      .catch(() => {});
+  }, []);
+  const productCode = packages.find((p) => p.slug === pkg)?.pol263ProductCode ?? null;
+  useEffect(() => {
+    if (!pkg || holderAge == null) return;
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setEstimating(true);
+      try {
+        const res = await fetch("/api/quote", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            packageSlug: pkg,
+            policyholderDateOfBirth: holderDob,
+            dependentDateOfBirths: others.map((p) => (ageOf(p.dateOfBirth) == null ? null : p.dateOfBirth)),
+            serviceSlugs: chosen,
+            serviceChoices: choices,
+            currency: "USD",
+          }),
+        });
+        setEstimate(await res.json());
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          setEstimate({ premium: null, currency: "USD", paymentSchedule: "monthly", note: "We'll confirm your premium directly." });
+        }
+      } finally {
+        setEstimating(false);
+      }
+    }, 450);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteKey]);
 
   function next() {
-    if (step === 3) fetchEstimate();
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
   function back() {
@@ -118,8 +180,11 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
             package: pkg,
             adults,
             children,
+            policyholderDateOfBirth: holderDob || null,
+            family: others,
             province,
             services: chosen,
+            serviceChoices: choices,
             estimate: estimate?.premium ?? null,
           },
         }),
@@ -138,10 +203,12 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           lastName: String(fd.get("lastName") || ""),
           email: String(fd.get("email") || ""),
           phone: String(fd.get("phone") || ""),
-          dateOfBirth: "",
+          dateOfBirth: holderDob,
           nationalId: "",
           gender: "",
         },
+        // The people already priced here, so the join flow starts with them (names added there).
+        dependents: others.map((p) => ({ firstName: "", lastName: "", relationship: p.relationship, dateOfBirth: p.dateOfBirth })),
       });
       setSubmit("done");
     } catch (err) {
@@ -244,27 +311,40 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
         <div>
           <h2 className="text-2xl">Who are you protecting?</h2>
           <p className="mt-1 text-stone">
-            A rough count is fine — we confirm exact family details when you join.
+            Each person is priced at their own age, so we need everyone&rsquo;s date of birth.
           </p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <Field label="Adults to cover (including yourself)">
-              <Select value={adults} onChange={(e) => setAdults(Number(e.target.value))}>
-                {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </Select>
+            <Field label="Your date of birth">
+              <TextInput type="date" value={holderDob} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setHolderDob(e.target.value)} />
             </Field>
-            <Field label="Children to cover">
-              <Select value={children} onChange={(e) => setChildren(Number(e.target.value))}>
-                {Array.from({ length: 11 }, (_, i) => i).map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+          </div>
+          {holderAge != null && (holderAge < 18 || holderAge > 70) && (
+            <p className="mt-2 text-sm text-[#a9583c]">The main member must be 18–70 when joining — you are {holderAge}.</p>
+          )}
+          <div className="mt-6 space-y-3">
+            {others.map((p, i) => {
+              const age = ageOf(p.dateOfBirth);
+              return (
+                <div key={i} className="grid items-end gap-3 rounded-xl border border-line p-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <Field label={`Person ${i + 2}`}>
+                    <Select value={p.relationship} onChange={(e) => setOthers(others.map((x, j) => (j === i ? { ...x, relationship: e.target.value } : x)))}>
+                      {RELATIONSHIPS.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </Select>
+                  </Field>
+                  <Field label="Date of birth">
+                    <TextInput type="date" value={p.dateOfBirth} max={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setOthers(others.map((x, j) => (j === i ? { ...x, dateOfBirth: e.target.value } : x)))} />
+                  </Field>
+                  <Button type="button" variant="ghost" onClick={() => setOthers(others.filter((_, j) => j !== i))}>Remove</Button>
+                  {age != null && p.relationship === "Child" && age > CHILD_MAX_AGE && (
+                    <p className="text-xs text-[#a9583c] sm:col-span-3">Children are covered up to age {CHILD_MAX_AGE} — this person would be priced as an adult.</p>
+                  )}
+                </div>
+              );
+            })}
+            <Button type="button" variant="outline" onClick={() => setOthers([...others, { relationship: "Child", dateOfBirth: "" }])}>
+              + Add a person
+            </Button>
           </div>
           <p className="mt-3 text-xs text-mist">
             Adults must be 18–70 when they join and children are covered up to age 20. A policy
@@ -316,28 +396,42 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           <div className="mt-5 max-h-[24rem] space-y-2 overflow-y-auto pr-1">
             {eligibleServices.map((s) => {
               const on = chosen.includes(s.slug);
+              const pricing = optionsBySlug[s.slug];
               return (
-                <label
+                <div
                   key={s.slug}
                   className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm",
+                    "rounded-xl border p-3 text-sm",
                     on ? "border-champagne bg-champagne/5" : "border-line",
                   )}
                 >
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    onChange={() => toggle(s.slug)}
-                    className="mt-0.5 size-4 accent-[var(--color-champagne)]"
-                  />
-                  <span>
-                    <span className="font-medium text-ink">{s.name}</span>
-                    <span className="ml-2 text-xs text-mist">
-                      {pricingModelLabels[s.pricing.model]}
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => toggle(s.slug)}
+                      className="mt-0.5 size-4 accent-[var(--color-champagne)]"
+                    />
+                    <span>
+                      <span className="font-medium text-ink">{s.name}</span>
+                      <span className="ml-2 text-xs text-mist">
+                        {pricingModelLabels[s.pricing.model]}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-stone">{s.shortDescription}</span>
                     </span>
-                    <span className="mt-0.5 block text-xs text-stone">{s.shortDescription}</span>
-                  </span>
-                </label>
+                  </label>
+                  {on && pricing && (
+                    <div className="pl-7">
+                      <BenefitChoices
+                        name={s.name}
+                        options={pricing.options}
+                        value={selection.serviceChoices[s.slug] ?? []}
+                        onChange={(next) => setServiceChoices(s.slug, next)}
+                        included={!!productCode && pricing.includedProductCodes.includes(productCode)}
+                      />
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -367,7 +461,7 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
           <h2 className="text-2xl">Review your protection</h2>
           <div className="mt-5 space-y-4">
             <Row label="Package" value={pkg ? packages.find((p) => p.slug === pkg)?.name ?? "—" : "Not chosen"} />
-            <Row label="Family" value={`${adults} adult${adults > 1 ? "s" : ""}${children ? `, ${children} child${children > 1 ? "ren" : ""}` : ""}`} />
+            <Row label="Family" value={[`You${holderAge != null ? ` (${holderAge})` : ""}`, ...others.map((p) => `${p.relationship}${ageOf(p.dateOfBirth) != null ? ` (${ageOf(p.dateOfBirth)})` : ""}`)].join(", ")} />
             <Row label="Country of residence" value={diasporaCountries.find((c) => c.code === residence)?.name ?? residence} />
             <Row label="Service location" value={province || "To be confirmed"} />
             <div>
@@ -378,11 +472,26 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
                 <p className="mt-1 text-sm text-mist">None yet — you can add services any time.</p>
               ) : (
                 <ul className="mt-1 flex flex-wrap gap-1.5">
-                  {chosen.map((c) => (
-                    <li key={c}>
-                      <Badge tone="neutral">{services.find((s) => s.slug === c)?.name ?? c}</Badge>
-                    </li>
-                  ))}
+                  {chosen.map((c) => {
+                    const opts = optionsBySlug[c]?.options ?? [];
+                    // e.g. "Catering: Modern menu × 200 guests"
+                    const picked = (selection.serviceChoices[c]?.length ? selection.serviceChoices[c] : opts.length ? [{}] : [])
+                      .map((ch) => {
+                        const o = opts.find((x) => x.key === ch.optionKey) ?? opts[0];
+                        if (!o) return null;
+                        const q = o.unit ? Math.max(o.minQty ?? 1, ch.quantity ?? o.defaultQty ?? 1) : null;
+                        return q ? `${o.label} × ${q} ${o.unit}s` : o.label;
+                      })
+                      .filter(Boolean);
+                    return (
+                      <li key={c}>
+                        <Badge tone="neutral">
+                          {services.find((s) => s.slug === c)?.name ?? c}
+                          {picked.length ? `: ${picked.join(", ")}` : ""}
+                        </Badge>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -406,12 +515,38 @@ export function QuoteWizard({ initialPackage }: { initialPackage?: string }) {
                 Confirmed by a Funeral Care Consultant
               </p>
             )}
+            {estimate?.breakdown && estimate.breakdown.length > 0 && (
+              <ul className="mt-4 space-y-1 border-t border-ivory/15 pt-3 text-sm">
+                {estimate.breakdown.map((b, i) => (
+                  <li key={i} className="flex justify-between gap-3">
+                    <span className="text-ivory/80">
+                      {i === 0 ? "You" : others[i - 1]?.relationship ?? "Family member"}
+                      {b.age != null ? ` · ${b.age}` : ""} · {BAND_LABEL[b.ageBand] ?? b.ageBand} rate · cover {money(b.coverAmount, estimate.currency)}
+                    </span>
+                    <span className="tabular-nums">{money(b.premium, estimate.currency)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {estimate?.unpricedServices && estimate.unpricedServices.length > 0 && (
+              <p className="mt-3 rounded-lg bg-ivory/10 p-2 text-xs text-ivory/80">
+                Not priced yet, so not in this figure: {estimate.unpricedServices.join(", ")}. A Funeral Care Consultant will confirm.
+              </p>
+            )}
             <p className="mt-2 text-xs text-ivory/60">
-              {estimate?.note ??
-                "Indicative only. Add-on services priced separately per their pricing treatment."}
+              {estimate?.note ?? "Each person is priced at their own age; every chosen service is added to each person's cover."}
             </p>
           </div>
         </div>
+      )}
+
+      {step >= 1 && step <= 3 && (
+        <p className="mt-6 flex items-center justify-between rounded-xl bg-cream px-4 py-3 text-sm" aria-live="polite">
+          <span className="text-stone">Estimated monthly premium</span>
+          <span className="font-semibold text-ink">
+            {!pkg ? "Choose a package" : holderAge == null ? "Add your date of birth" : estimating ? "Calculating…" : estimate?.premium ? money(estimate.premium, estimate.currency) : "Confirmed by a consultant"}
+          </span>
+        </p>
       )}
 
       {/* Step 5 — Your details */}

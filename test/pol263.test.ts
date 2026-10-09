@@ -84,29 +84,50 @@ describe("createLead", () => {
 });
 
 describe("registerPolicy", () => {
-  const application = { ...lead, productVersionId: "pv-1", nationalId: "63-123456A42", selectedServices: ["x"] };
+  // Registration first looks the chosen services up in POL263's benefits list (registration-options),
+  // so each becomes a benefit on every covered person; then it registers.
+  const options = { status: 200, body: { products: [], addOns: [{ id: "ao-cat", name: "Catering", cashValue: "500.00" }] } };
+  const application = {
+    ...lead, productVersionId: "pv-1", nationalId: "63-123456A42", selectedServices: ["catering"],
+    dependents: [{ firstName: "Rudo", lastName: "Moyo", relationship: "Child", dateOfBirth: "2018-05-01" }],
+  };
 
   it("does not re-send a spent Turnstile token after a POL263 server error", async () => {
-    const { mod, calls } = await load([{ status: 502 }]);
+    const { mod, calls } = await load([options, { status: 502 }]);
     const res = await mod.registerPolicy(application);
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0].url).toContain("/api/public/register-policy");
+    const writes = calls.filter((c) => !c.url.includes("registration-options"));
+    expect(writes).toHaveLength(1);
+    expect(writes[0].url).toContain("/api/public/register-policy");
     expect(res).toMatchObject({ ok: true, source: "fallback", data: { status: "captured" } });
   });
 
   it("returns POL263's rejection message on a 400", async () => {
-    const { mod } = await load([{ status: 400, body: { message: "Bad ID" } }]);
+    const { mod } = await load([options, { status: 400, body: { message: "Bad ID" } }]);
     expect(await mod.registerPolicy(application)).toMatchObject({ ok: false, error: "Bad ID" });
   });
 
   it("makes no follow-up POL263 call after a successful registration", async () => {
     const { mod, calls } = await load([
+      options,
       { status: 200, body: { policyNumber: "P1", activationCode: "A1", paymentLink: null } },
     ]);
     const res = await mod.registerPolicy(application);
     expect(res).toMatchObject({ ok: true, data: { status: "registered", policyNumber: "P1" } });
-    expect(calls).toHaveLength(1);
+    expect(calls.filter((c) => !c.url.includes("registration-options"))).toHaveLength(1);
+  });
+
+  it("sends each chosen service as a benefit on every covered person", async () => {
+    const { mod, calls } = await load([
+      options,
+      { status: 200, body: { policyNumber: "P2", activationCode: "A2", paymentLink: null } },
+    ]);
+    await mod.registerPolicy(application);
+    const reg = calls.find((c) => c.url.includes("/api/public/register-policy"));
+    expect(reg?.body?.memberAddOns).toEqual([
+      { memberRef: "holder", addOnId: "ao-cat" },
+      { memberRef: "dependent:0", addOnId: "ao-cat" },
+    ]);
   });
 
   it("captures via a POL263 lead when registration can't be attempted", async () => {
@@ -116,6 +137,40 @@ describe("registerPolicy", () => {
     expect(calls[0].url).toContain("/quote-lead");
     expect(calls[0].body?.turnstileToken).toBe("tok");
     expect(res).toMatchObject({ ok: true, data: { status: "captured" } });
+  });
+});
+
+describe("benefitsForEveryone", () => {
+  it("names chosen services POL263 can't price yet, so the visitor is told", async () => {
+    const { mod } = await load([{ status: 200, body: { products: [], addOns: [
+      { id: "ao-cat", name: "Catering", cashValue: "500.00" },
+      { id: "ao-pa", name: "PA System", cashValue: null },
+    ] } }]);
+    const r = await mod.benefitsForEveryone(["catering", "pa-system"], 1);
+    expect(r.memberAddOns).toHaveLength(4); // 2 services x (holder + 1 dependant)
+    expect(r.unpriced).toEqual(["PA System"]);
+  });
+
+  it("sends each chosen option with its quantity, for every person; unknown or repeated options are dropped", async () => {
+    const { mod } = await load([{ status: 200, body: { products: [], addOns: [
+      { id: "ao-cat", name: "Catering", cashValue: "600.00", options: [
+        { key: "traditional", label: "Traditional", unitPrice: "4.00", unit: "guest", minQty: 50, defaultQty: 150 },
+        { key: "modern", label: "Modern", unitPrice: "6.00", unit: "guest", minQty: 50, defaultQty: 150 },
+      ] },
+      { id: "ao-pa", name: "PA System", cashValue: null, options: [{ key: "standard", label: "Standard", unitPrice: "100.00" }] },
+    ] } }]);
+    const r = await mod.benefitsForEveryone(["catering", "pa-system"], 1, [
+      { slug: "catering", optionKey: "modern", quantity: 200 },
+      { slug: "catering", optionKey: "modern", quantity: 90 },
+      { slug: "catering", optionKey: "gold" },
+    ]);
+    expect(r.memberAddOns).toEqual([
+      { memberRef: "holder", addOnId: "ao-cat", optionKey: "modern", quantity: 200 },
+      { memberRef: "dependent:0", addOnId: "ao-cat", optionKey: "modern", quantity: 200 },
+      { memberRef: "holder", addOnId: "ao-pa" },
+      { memberRef: "dependent:0", addOnId: "ao-pa" },
+    ]);
+    expect(r.unpriced).toEqual([]); // priced by its options even with no single cash value
   });
 });
 

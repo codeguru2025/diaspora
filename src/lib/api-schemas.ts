@@ -56,6 +56,17 @@ export const leadSchema = z.object({
   turnstileToken,
 });
 
+/** The option chosen for a service and how many (catering: modern menu, 200 guests). */
+const serviceChoices = z
+  .array(
+    z.object({
+      slug: z.string().trim().min(1).max(80),
+      optionKey: z.string().trim().min(1).max(60).optional(),
+      quantity: z.number().int().min(1).max(5000).optional(),
+    }),
+  )
+  .max(120);
+
 export const quoteSchema = z.object({
   packageSlug: optText(60),
   productVersionId: id.optional(),
@@ -63,6 +74,9 @@ export const quoteSchema = z.object({
   memberCount: z.number().int().min(1).max(30).optional(),
   dependentDateOfBirths: z.array(isoDate.nullable()).max(30).optional(),
   addOnIds: idList.optional(),
+  /** Chosen services (site slugs) — priced as benefits on every covered person. */
+  serviceSlugs: z.array(z.string().trim().min(1).max(80)).max(60).optional(),
+  serviceChoices: serviceChoices.optional(),
   currency: currency.optional(),
   paymentSchedule: paymentSchedule.optional(),
 });
@@ -108,6 +122,7 @@ export const registerSchema = z.object({
   beneficiary: beneficiary.optional(),
   serviceProvince: optText(60),
   selectedServices: z.array(z.string().max(100)).max(60).optional(),
+  serviceChoices: serviceChoices.optional(),
   turnstileToken,
 });
 

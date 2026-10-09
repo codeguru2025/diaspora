@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/contact",
     "/faq",
     "/gallery",
+    "/brochures",
     "/resources",
     "/digital-services",
     "/tribute",

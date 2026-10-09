@@ -12,7 +12,7 @@ import { track } from "@/lib/analytics";
 import { packages } from "@/config/packages";
 import { services } from "@/config/services";
 import { diasporaCountries, zimbabweProvinces } from "@/config/content";
-import { useSelection, clearSelection } from "@/lib/selection-store";
+import { useSelection, clearSelection, flatChoices } from "@/lib/selection-store";
 import {
   useApplication,
   readApplication,
@@ -54,6 +54,8 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
 
   const packageSlug = app.packageSlug ?? initialPackage ?? selection.packageSlug ?? null;
   const chosenServices = app.selectedServices.length ? app.selectedServices : selection.serviceSlugs;
+  // The option and quantity picked for each service in the quote builder (catering menu, guests…).
+  const serviceChoices = flatChoices(selection, chosenServices);
   const pkg = packages.find((p) => p.slug === packageSlug) ?? null;
 
   useEffect(() => {
@@ -72,7 +74,11 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
       body: JSON.stringify({
         packageSlug,
         memberCount: 1 + app.dependents.length,
+        // Everyone priced at their own age, and every chosen service on each person (as at registration).
+        policyholderDateOfBirth: app.applicant.dateOfBirth || undefined,
         dependentDateOfBirths: app.dependents.map((d) => d.dateOfBirth || null),
+        serviceSlugs: chosenServices,
+        serviceChoices,
         currency: app.currency,
         paymentSchedule: app.paymentSchedule,
       }),
@@ -85,7 +91,8 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
         }
       })
       .catch(() => setEstimate(null));
-  }, [step, packageSlug, app.dependents, app.currency, app.paymentSchedule]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, packageSlug, app.dependents, app.currency, app.paymentSchedule, app.applicant.dateOfBirth, chosenServices.join(","), JSON.stringify(serviceChoices)]);
 
   const setApplicant = (patch: Partial<typeof app.applicant>) =>
     writeApplication({ applicant: { ...app.applicant, ...patch } });
@@ -139,6 +146,7 @@ export function JoinFlow({ initialPackage }: { initialPackage?: string }) {
           dependents: app.dependents,
           beneficiary: beneficiaryComplete ? app.beneficiary : undefined,
           selectedServices: chosenServices,
+          serviceChoices,
           turnstileToken,
         }),
       });

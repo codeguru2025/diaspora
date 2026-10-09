@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getQuote, resolveProductVersionId } from "@/lib/pol263";
+import { benefitsForEveryone, getQuote, resolveProductVersionId } from "@/lib/pol263";
 import { parseBody, quoteSchema } from "@/lib/api-schemas";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
 
@@ -9,12 +9,19 @@ export async function POST(req: Request) {
 
   const body = await parseBody(req, quoteSchema);
   if (!body.ok) return body.response;
-  const { packageSlug, ...quote } = body.data;
+  const { packageSlug, serviceSlugs, serviceChoices, ...quote } = body.data;
 
   const productVersionId =
     quote.productVersionId ?? (packageSlug ? await resolveProductVersionId(packageSlug) : undefined);
 
-  const res = await getQuote({ ...quote, productVersionId });
+  // Each chosen service (its option × quantity) is a benefit on every covered person, priced at
+  // that person's age.
+  const { memberAddOns, unpriced } = await benefitsForEveryone(
+    serviceSlugs ?? [],
+    (quote.dependentDateOfBirths ?? []).length,
+    serviceChoices ?? [],
+  );
+  const res = await getQuote({ ...quote, productVersionId, memberAddOns: memberAddOns.length ? memberAddOns : undefined });
 
-  return NextResponse.json({ ...res.data, source: res.source });
+  return NextResponse.json({ ...res.data, unpricedServices: unpriced, source: res.source });
 }

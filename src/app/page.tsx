@@ -16,6 +16,7 @@ import {
   FamilyStoriesSection,
 } from "@/components/marketing/sections";
 import { ServiceCard } from "@/components/marketing/service-card";
+import { FleetSection } from "@/components/marketing/fleet-section";
 import { getService } from "@/config/services";
 import { cta } from "@/config/site";
 
@@ -49,6 +50,8 @@ export default function HomePage() {
       <NameItShowcase />
 
       <DiasporaSection />
+
+      <FleetSection />
 
       <FuneralNowBand />
 

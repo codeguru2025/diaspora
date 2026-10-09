@@ -180,4 +180,5 @@ export const galleryCategories: string[] = [
   "Personalisation",
   "Photography",
   "Livestreaming",
+  "Fleet",
 ];

@@ -14,13 +14,18 @@ import { useSyncExternalStore } from "react";
 
 const KEY = "dfs.selection.v1";
 
+/** One option chosen for a service and how many (catering: modern menu, 200 guests). */
+export type OptionChoice = { optionKey?: string; quantity?: number };
+
 export type Selection = {
   packageSlug: string | null;
   serviceSlugs: string[];
+  /** Per service slug, the option(s) chosen — absent = POL263's default option and quantity. */
+  serviceChoices: Record<string, OptionChoice[]>;
   updatedAt: number;
 };
 
-const empty: Selection = { packageSlug: null, serviceSlugs: [], updatedAt: 0 };
+const empty: Selection = { packageSlug: null, serviceSlugs: [], serviceChoices: {}, updatedAt: 0 };
 
 export function readSelection(): Selection {
   if (typeof window === "undefined") return empty;
@@ -31,6 +36,8 @@ export function readSelection(): Selection {
     return {
       packageSlug: parsed.packageSlug ?? null,
       serviceSlugs: Array.isArray(parsed.serviceSlugs) ? parsed.serviceSlugs : [],
+      serviceChoices:
+        parsed.serviceChoices && typeof parsed.serviceChoices === "object" ? parsed.serviceChoices : {},
       updatedAt: parsed.updatedAt ?? 0,
     };
   } catch {
@@ -59,8 +66,21 @@ export function toggleService(slug: string): boolean {
   const serviceSlugs = has
     ? cur.serviceSlugs.filter((s) => s !== slug)
     : [...cur.serviceSlugs, slug];
-  write({ ...cur, serviceSlugs });
+  const serviceChoices = { ...cur.serviceChoices };
+  if (has) delete serviceChoices[slug];
+  write({ ...cur, serviceSlugs, serviceChoices });
   return !has; // now selected?
+}
+
+/** Replace the option(s) chosen for a service. */
+export function setServiceChoices(slug: string, choices: OptionChoice[]) {
+  const cur = readSelection();
+  write({ ...cur, serviceChoices: { ...cur.serviceChoices, [slug]: choices } });
+}
+
+/** The chosen options of the given services, flat, as the quote and join APIs take them. */
+export function flatChoices(selection: Selection, slugs: string[]) {
+  return slugs.flatMap((slug) => (selection.serviceChoices[slug] ?? []).map((c) => ({ slug, ...c })));
 }
 
 export function clearSelection() {

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { CampaignLanding } from "@/components/marketing/campaign-landing";
+import { DFS_PRODUCT_PHOTOS } from "@/lib/service-photos";
 
 export const metadata: Metadata = {
   title: "Travel Packs",
@@ -24,6 +26,15 @@ export default function TravelPackPage() {
       primary={{ label: "Add a travel pack to your quote", href: "/get-a-quote" }}
       leadSource="speak_to_us"
       leadTitle="Enquire about travelling packs"
+      image={
+        <Image
+          src={DFS_PRODUCT_PHOTOS["individual-travel-pack"].src}
+          alt="The DFS funeral travel pack: branded travel bag, water, wet wipes, toiletries, neck pillow, eye mask and essentials"
+          width={DFS_PRODUCT_PHOTOS["individual-travel-pack"].width}
+          height={DFS_PRODUCT_PHOTOS["individual-travel-pack"].height}
+          className="aspect-[4/3] w-full rounded-3xl border border-ivory/20 object-cover shadow-[var(--shadow-raised)]"
+        />
+      }
     />
   );
 }
